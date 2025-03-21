@@ -16,11 +16,13 @@
 		"production-mode": "export NODE_ENV=production"
 	},
 	"dependencies": {
+		"@types/swagger-jsdoc": "^6.0.4",
 		"bcrypt": "^5.1.1",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.7",
 		"express": "^5.0.1",
 		"express-rate-limit": "^7.5.0",
+		"express-validator": "^7.2.1",
 		"helmet": "^8.1.0",
 		"hpp": "^0.2.3",
 		"ini": "^5.0.0",
@@ -34,7 +36,11 @@
 		"@types/express": "^5.0.1",
 		"@types/jest": "^29.5.14",
 		"@types/node": "^22.13.11",
+		"@types/swagger-ui-express": "^4.1.8",
 		"jest": "^29.7.0",
+		"supertest": "^7.1.0",
+		"swagger-jsdoc": "^6.2.8",
+		"swagger-ui-express": "^5.0.1",
 		"ts-jest": "^29.2.6",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.8.2"
