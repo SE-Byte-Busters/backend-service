@@ -27,6 +27,7 @@
 		"hpp": "^0.2.3",
 		"ini": "^5.0.0",
 		"jsonwebtoken": "^9.0.2",
+		"mongoose": "^8.12.2",
 		"pino": "^9.6.0",
 		"pino-http": "^10.4.0",
 		"pino-pretty": "^13.0.0",

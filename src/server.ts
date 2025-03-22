@@ -1,8 +1,11 @@
 import app from './app';
 import dotenv from 'dotenv';
 import http from 'http';
+import { connectMongoDB, disconnectMongoDB } from './config';
+
 
 dotenv.config();
+connectMongoDB();
 
 const PORT = process.env.PORT || 3000;
 
@@ -18,19 +21,9 @@ const shutdown = () => {
 	server.close(() => {
 		console.log('✅ HTTP server closed.');
 
-		// Close MongoDB
-		// mongoose.connection.close(false, () => {
-		//     console.log('✅ MongoDB connection closed.');
-		// });
-
-		// // Close PostgreSQL
-		// pgClient.end(() => {
-		//     console.log('✅ PostgreSQL connection closed.');
-		//     process.exit(0); // Exit process
-		// });
+		disconnectMongoDB();
 	});
 };
 
-// Signal Handlers
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
