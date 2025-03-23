@@ -8,7 +8,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import rateLimit from 'express-rate-limit';
-import { logger, expressLogger } from './config/logger';
+import { logger, expressLogger } from './config';
 const config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
 const port = parseInt(config.server.port);
 // import routes from './routes'; // Import your routes
