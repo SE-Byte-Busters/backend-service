@@ -1,2 +1,4 @@
+import User from './user.model';
+import OTP from './otp.model';
 
-export * from './user.model';
+export { User, OTP };

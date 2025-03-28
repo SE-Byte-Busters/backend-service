@@ -1,57 +1,79 @@
+import mongoose, { Schema, Model } from 'mongoose';
+import { hashPassword, comparePassword } from '../utils';
+import { IUser } from '../dto';
 
-import mongoose, { Schema, Document, Model } from 'mongoose';
-
-// User Interface for TypeScript
-export interface IUser extends Document {
-    username: string;
-    email: string;
-    password: string;
-    role: 'user' | 'admin' | 'manager' | 'company';
-    createdAt: Date;
-    updatedAt: Date;
-    comparePassword(candidatePassword: string): Promise<boolean>;
-}
-
-// User Schema
 const userSchema = new Schema<IUser>(
-    {
-        username: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true,
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true,
-            lowercase: true,
-        },
-        password: {
-            type: String,
-            required: true,
-            minlength: 6,
-        },
-        role: {
-            type: String,
-            enum: ['user', 'admin', 'manager', 'company'],
-            default: 'user',
-        },
-    },
-    {
-        timestamps: true, // Automatically manages `createdAt` and `updatedAt`
-    }
+	{
+		username: {
+			type: String,
+			required: true,
+			minlength: 3,
+			maxlength: 100,
+			trim: true,
+		},
+		phoneNumber: {
+			type: String,
+			unique: true,
+			required: true,
+			match: [/^\d{10,14}$/, 'Invalid phone number format.'],
+		},
+		role: { 
+			type: String,
+			enum: ['user', 'group', 'company'], 
+			default: 'user' 
+		},
+		email: {
+			type: String,
+			unique: true,
+			required: false,
+			match: [/\S+@\S+\.\S+/, 'Invalid email format.'],
+			trim: true,
+		},
+		password: {
+			type: String,
+			required: true,
+			minlength: 8,
+			trim: true,
+		},
+		firstName: {
+			type: String,
+			trim: true,
+			required: false,
+			// match: [/^[\u0600-\u06FF\w\s]+$/, 'Invalid username. Must be Persian characters or alphanumeric.'],
+		},
+		lastName: {
+			type: String,
+			trim: true,
+			required: false,
+		},
+		isVerified: {
+			type: Boolean,
+			default: false,
+			required: true,
+		},
+		status: {
+			type: Number,
+			default: 0,
+			required: false,
+		},
+		lastOTPAttempt: {
+			type: Date,
+			required: true,
+		}
+	},
+	{
+		timestamps: true,
+	}
 );
 
-// Method to compare passwords
-userSchema.methods.comparePassword = async function (
-    candidatePassword: string
-): Promise<boolean> {
-    return candidatePassword === this.password; // Replace with proper hashing in production
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+	return await comparePassword(candidatePassword, this.password);
 };
 
-// User Model
+userSchema.methods.hashPassword = async function (candidatePassword: string): Promise<string> {
+	return await hashPassword(candidatePassword);
+};
+
 const User: Model<IUser> = mongoose.model<IUser>('User', userSchema);
 
 export default User;
