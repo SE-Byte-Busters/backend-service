@@ -11,7 +11,7 @@ import rateLimit from 'express-rate-limit';
 import { logger, expressLogger } from './config';
 const config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
 const port = parseInt(config.server.port);
-// import routes from './routes'; // Import your routes
+import routes from './routes/routes';
 
 
 const app: Application = express();
@@ -41,7 +41,7 @@ app.get('/health', (req: Request, res: Response<{ status: String }>) => {
 });
 
 // Application Routes
-// app.use('/api/v1', routes);
+app.use('/api/v1', routes);
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
