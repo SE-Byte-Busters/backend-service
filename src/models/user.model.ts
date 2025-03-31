@@ -15,7 +15,7 @@ const userSchema = new Schema<IUser>(
 			type: String,
 			unique: true,
 			required: true,
-			match: [/^\d{10,14}$/, 'Invalid phone number format.'],
+			match: [/^\+98\d{10}$/, 'Invalid phone number format.'],
 		},
 		role: { 
 			type: String,
