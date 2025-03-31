@@ -28,7 +28,7 @@ export const OTPBaseSchema = z.object({
 	verificationAttempts: z.number().int().min(0).max(5, "Maximum attempts exceeded"),
 	createdAt: z.date().default(() => new Date()),
 	updatedAt: z.date()
-});
+}).strict();
 
 export const OTPSchema = OTPBaseSchema.refine(
 	data => data.method === 'phone' ? !!data.phone : !!data.email,

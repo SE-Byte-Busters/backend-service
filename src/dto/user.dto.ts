@@ -24,7 +24,7 @@ export const userSchema = z.object({
 		.min(3, 'Username must be at least 3 characters')
 		.max(100, 'Username cannot exceed 100 characters'),
 	phoneNumber: z.string()
-		.regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format (E.164)"),
+		.regex(/^\+98\d{10}$/, "Invalid phone number format (E.164)"), // /^\+?[1-9]\d{1,14}$/
 	role: z.enum(['user', 'group', 'company']),
 	email: z.string().email().optional(),
 	password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -33,7 +33,9 @@ export const userSchema = z.object({
 	isVerified: z.boolean(),
 	status: z.number().optional(),
 	lastOTPAttempt: z.date(),
-});
+}).strict();
+
+export type UserInput = z.infer<typeof userSchema>;
 
 // Define a schema for updating a user (partial fields allowed)
 export const updateUserSchema = userSchema.partial();
