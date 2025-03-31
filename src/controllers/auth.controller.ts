@@ -7,7 +7,10 @@ import { logger } from '../config';
 
 export const signupController = async (req: Request, res: Response): Promise<void> => {
 	try {
-		const validatedData: UserInput = userSchema.parse(req.body);
+		const validatedData: UserInput = userSchema.parse({
+			...req.body,
+			role: 'user', isVerified: false, status: 0, lastOTPAttempt: new Date(),
+		});
 
 		const result = await signupService(validatedData);
 
@@ -15,13 +18,12 @@ export const signupController = async (req: Request, res: Response): Promise<voi
 	} catch (error) {
 		if (error instanceof ZodError) {
 			res.status(400).json({ message: 'Validation failed', errors: error.errors });
-		}
-
-		if (error instanceof CustomError) {
+		} else if (error instanceof CustomError) {
 			res.status(error.statusCode).json({ message: error.message });
+		} else {
+			logger.error(`[Error] Local Error Handler: (signupController) \n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
 		}
-
-		logger.error(`[Error] Local Error Handler: (signupController) \n ${error}`);
-		res.status(500).json({ message: new InternalServerError().message });
 	}
 };
+
