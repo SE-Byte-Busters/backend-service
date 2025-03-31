@@ -4,11 +4,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mydb';
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/<example-db>?authSource=<example-db>&replicaSet=rs0&directConnection=true';
 
 export const connectMongoDB = async () => {
 	try {
-		await mongoose.connect(mongoURI);
+		await mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 5000, });
 		// await User.createIndexes();
 		console.log('✅ Connected to MongoDB');
 	} catch (error) {
