@@ -1,9 +1,9 @@
 import User from '../models/user.model';
 import OTP from '../models/otp.model';
 import { IUser, UserInput } from '../dto';
-import { BadRequestError } from '../utils';
+import { BadRequestError, ForbiddenError, NotFoundError } from '../utils';
 import { sendOTP, generateOTP } from '../utils';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 export const signupService = async (userData: UserInput) => {
 	const { phoneNumber, email } = userData;
@@ -42,5 +42,37 @@ export const signupService = async (userData: UserInput) => {
 		session.endSession();
 	}
 
-	return { userId: newUser._id, otpSentTo: phoneNumber || email };
+	return { _id: newUser._id, otpSentTo: phoneNumber || email };
 };
+
+
+export const verifyOTP = async (
+		code: string, userId: string, method: string, position: string ) => {
+	const otpRecord = await OTP.findOne({ user: new Types.ObjectId(userId), position, method });
+
+	if (!otpRecord) {
+		throw new NotFoundError('OTP not found or expired.');
+	} 
+	otpRecord.verificationAttempts = otpRecord.verificationAttempts + 1;
+
+	if (otpRecord.verificationAttempts == 7){ // change to ini
+		await otpRecord.save({ timestamps: false });
+		throw new BadRequestError('Maximum attempts reached.');
+	} else if (otpRecord.verificationCode !== code) {
+		await otpRecord.save({ timestamps: false });
+		throw new BadRequestError('Invalid OTP.');
+	}
+
+	const user = await User.findById(new Types.ObjectId(userId));
+	if(user){
+		user.password = await user.hashPassword(user.password);
+		user.isVerified = true;
+		await user.save();
+	} else {
+		throw new ForbiddenError('User related to OTP not found.');
+	}
+
+	await OTP.deleteOne({ _id: otpRecord._id });
+
+	return { _id: user._id, username: user.username, phoneNumber: user.phoneNumber };
+}
