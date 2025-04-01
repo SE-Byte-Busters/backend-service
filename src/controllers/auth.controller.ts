@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { signupService, verifyOTP } from '../services/';
+import { sendAgainOTP, signupService, verifyOTP } from '../services/';
 import { userSchema, UserInput, IUser } from '../dto/';
 import { ZodError } from 'zod';
 import { CustomError, InternalServerError } from '../utils';
@@ -29,16 +29,36 @@ export const signupController = async (req: Request, res: Response): Promise<voi
 
 export const confirmSignUpOTP = async (req: Request, res: Response): Promise<void> => {
 	try {
-		const { phoneNumber, code, userId, method } = req.body;
-		if (!phoneNumber || !code || !userId || !method) {
+		const { phoneNumber, code, _id, method } = req.body;
+		if (!phoneNumber || !code || !_id || !method) {
 			res.status(400).json({ message: 'Input parameters missing.', errors: {} });
 		}
-		// validate phoneNumber, code, userId
-		// token for number of try entering code. (and send again count)
+		// validate phoneNumber, code, _id
 
-		const user = await verifyOTP(code, userId, method, 'signUp');
+		const user = await verifyOTP(code, _id, method, 'signUp');
 
 		res.status(200).json({ message: 'Sign-up confirmed successfully.', data: user });
+	} catch (error) {
+		if (error instanceof CustomError) {
+			res.status(error.statusCode).json({ message: error.message });
+		} else {
+			logger.error(`[Error] Local Error Handler: (signupController) \n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+
+export const sendAgainSignUpOTP = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const { _id, method } = req.body;
+		if (!_id || !method) {
+			res.status(400).json({ message: 'Input parameters missing.', errors: {} });
+		}
+		// validate method
+
+		const user = await sendAgainOTP(_id, method, 'signUp');
+
+		res.status(200).json({ message: 'OTP code send Again.', data: user });
 	} catch (error) {
 		if (error instanceof CustomError) {
 			res.status(error.statusCode).json({ message: error.message });
