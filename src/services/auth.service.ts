@@ -1,9 +1,10 @@
 import User from '../models/user.model';
 import OTP from '../models/otp.model';
 import { IUser, UserInput } from '../dto';
-import { BadRequestError, ForbiddenError, NotFoundError } from '../utils';
+import { BadRequestError, ForbiddenError, NotFoundError, UnauthorizedError } from '../utils';
 import { sendOTP, generateOTP } from '../utils';
 import mongoose, { Types } from 'mongoose';
+import jwt from 'jsonwebtoken';
 
 export const signupService = async (userData: UserInput) => {
 	const { phoneNumber, email } = userData;
@@ -75,7 +76,7 @@ export const verifyOTP = async (
 	await OTP.deleteOne({ _id: otpRecord._id });
 
 	return { _id: user._id, username: user.username, phoneNumber: user.phoneNumber };
-}
+};
 
 export const sendAgainOTP = async (_id: string, method: string, position: string) => {
 
@@ -101,4 +102,24 @@ export const sendAgainOTP = async (_id: string, method: string, position: string
 	await otpRecord.save();
 
 	return { _id: otpRecord.user };
-}
+};
+
+export const loginService = async (phoneNumber: string, email: string, password: string): 
+	Promise<{ token: string, role: string }> => {
+	const user = await User.findOne({ $or: [{ phoneNumber }, { email }] });
+	if(!user) {
+		throw new NotFoundError("Username/Password is not valid.");
+	} else if (!user.isVerified) {
+		throw new UnauthorizedError("Plaese verify your account to login.");
+	}
+
+	const isPasswordValid = await user.comparePassword(password);
+	if(!isPasswordValid) {
+		throw new NotFoundError("Username/Password is not valid.");
+	}
+
+	const jwtToken = jwt.sign({ _id: user._id }
+		, process.env.JWT_SECRET || 'Random128BitHexString', { expiresIn: '2h' }); // change to ini file 'userExpirationTime'
+
+	return { token: jwtToken, role: 'user' };
+};
