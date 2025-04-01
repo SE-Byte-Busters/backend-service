@@ -47,8 +47,8 @@ export const signupService = async (userData: UserInput) => {
 
 
 export const verifyOTP = async (
-		code: string, userId: string, method: string, position: string ) => {
-	const otpRecord = await OTP.findOne({ user: new Types.ObjectId(userId), position, method });
+		code: string, _id: string, method: string, position: string ) => {
+	const otpRecord = await OTP.findOne({ user: new Types.ObjectId(_id), position, method });
 
 	if (!otpRecord) {
 		throw new NotFoundError('OTP not found or expired.');
@@ -57,13 +57,13 @@ export const verifyOTP = async (
 
 	if (otpRecord.verificationAttempts == 7){ // change to ini
 		await otpRecord.save({ timestamps: false });
-		throw new BadRequestError('Maximum attempts reached.');
+		throw new ForbiddenError('Maximum attempts reached.');
 	} else if (otpRecord.verificationCode !== code) {
 		await otpRecord.save({ timestamps: false });
 		throw new BadRequestError('Invalid OTP.');
 	}
 
-	const user = await User.findById(new Types.ObjectId(userId));
+	const user = await User.findById(new Types.ObjectId(_id));
 	if(user){
 		user.password = await user.hashPassword(user.password);
 		user.isVerified = true;
@@ -75,4 +75,30 @@ export const verifyOTP = async (
 	await OTP.deleteOne({ _id: otpRecord._id });
 
 	return { _id: user._id, username: user.username, phoneNumber: user.phoneNumber };
+}
+
+export const sendAgainOTP = async (_id: string, method: string, position: string) => {
+
+	const otpRecord = await OTP.findOne({ user: new Types.ObjectId(_id), position, method });
+	const LIMIT_MINUTES_MS = 3 * 60 * 1000; // 3 minutes in milliseconds
+	
+	if (!otpRecord) {
+		throw new NotFoundError('OTP not found or expired.');
+	} else if(otpRecord.resendAttempts == 4){ // change to ini file
+		throw new ForbiddenError('Maximum attempts reached.');
+	} else if (new Date() < new Date(otpRecord.updatedAt.getTime() + LIMIT_MINUTES_MS)){
+		throw new ForbiddenError('Wait for the previous attempt.');
+	}
+	
+	const otpCode = generateOTP();
+	if(otpRecord.phone){
+		await sendOTP(otpRecord.phone, otpCode);
+	}
+
+	otpRecord.verificationCode = otpCode;
+	otpRecord.verificationAttempts = 0;
+	otpRecord.resendAttempts = otpRecord.resendAttempts + 1;
+	await otpRecord.save();
+
+	return { _id: otpRecord.user };
 }
