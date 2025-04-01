@@ -8,7 +8,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import rateLimit from 'express-rate-limit';
-import { logger, expressLogger } from './config';
+import { logger, expressLogger, setupSwagger } from './config';
 const config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
 const port = parseInt(config.server.port);
 import routes from './routes/routes';
@@ -23,6 +23,7 @@ app.use(cors());
 app.use(helmet());
 app.use(hpp());
 app.use(expressLogger);
+setupSwagger(app);
 
 // change to config file
 // Rate Limiter (e.g., max 100 requests per 15 minutes)
