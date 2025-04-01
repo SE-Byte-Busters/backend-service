@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { sendAgainOTP, signupService, verifyOTP } from '../services/';
+import { loginService, sendAgainOTP, signupService, verifyOTP } from '../services/';
 import { userSchema, UserInput, IUser } from '../dto/';
 import { ZodError } from 'zod';
 import { CustomError, InternalServerError } from '../utils';
@@ -59,6 +59,28 @@ export const sendAgainSignUpOTP = async (req: Request, res: Response): Promise<v
 		const user = await sendAgainOTP(_id, method, 'signUp');
 
 		res.status(200).json({ message: 'OTP code send Again.', data: user });
+	} catch (error) {
+		if (error instanceof CustomError) {
+			res.status(error.statusCode).json({ message: error.message });
+		} else {
+			logger.error(`[Error] Local Error Handler: (signupController) \n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+
+export const loginController = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const { username, password } = req.body;
+		if (!username || !password) {
+			res.status(400).json({ message: 'Input parameters missing.', errors: {} });
+		}
+
+		const result: { token: string, role: string } = await loginService(username, username, password);
+
+		res.setHeader('x-token', result.token);
+		res.setHeader('x-role', result.role);
+		res.status(201).json({ message: 'Login successfully.', data: result });
 	} catch (error) {
 		if (error instanceof CustomError) {
 			res.status(error.statusCode).json({ message: error.message });
