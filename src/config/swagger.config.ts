@@ -18,7 +18,7 @@ const options: swaggerJsdoc.Options = {
 			},
 		],
 	},
-	apis: [path.join(__dirname, '../routes/*.ts')],
+	apis: [path.join(__dirname, '../routes/*.ts'), path.join(__dirname, '../routes/*.js')],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
