@@ -9,6 +9,7 @@ export interface IOTP extends Document {
 	position: 'signUp' | 'forgotPassword';
 	verificationCode: string;
 	verificationAttempts: number;
+	resendAttempts: number;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -25,7 +26,8 @@ export const OTPBaseSchema = z.object({
 	verificationCode: z.string()
 		.length(6, "Verification code must be 6 characters")
 		.regex(/^\d+$/, "Code must contain only digits"),
-	verificationAttempts: z.number().int().min(0).max(5, "Maximum attempts exceeded"),
+	verificationAttempts: z.number().int().min(0).max(7, "Maximum attempts exceeded"),
+	resendAttempts: z.number().int().min(0).max(4, "Maximum attempts exceeded"),  // change to ini file
 	createdAt: z.date().default(() => new Date()),
 	updatedAt: z.date()
 }).strict();

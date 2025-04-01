@@ -33,7 +33,12 @@ const OTPSchema = new Schema<IOTP>(
 		verificationAttempts: {
 			type: Number,
 			default: 0,
-			max: 5, // change to ini file
+			max: 7, // change to ini file
+		},
+		resendAttempts: {
+			type: Number,
+			default: 0,
+			max: 4, // change to ini file
 		},
 		updatedAt: {
 			type: Date,
