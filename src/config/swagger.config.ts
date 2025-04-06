@@ -2,6 +2,9 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Application } from 'express';
 import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const options: swaggerJsdoc.Options = {
 	definition: {
@@ -13,8 +16,8 @@ const options: swaggerJsdoc.Options = {
 		},
 		servers: [
 			{
-				url: `http://localhost:${process.env.PORT}/api/v1/`,
-				description: 'Local Server',
+				url: `http://localhost:${process.env.PORT}/api/v1/`, // change to ini file
+				description: 'API Server',
 			},
 		],
 	},

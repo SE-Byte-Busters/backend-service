@@ -103,7 +103,7 @@ router.post('/signup', signupController);
 /**
  * @swagger
  * /auth/confirm-signup:
- *   post:
+ *   put:
  *     summary: Confirm OTP for user signup
  *     tags: [Auth]
  *     description: Verifies the OTP sent to the user and confirms the signup process.
@@ -169,7 +169,7 @@ router.put('/confirm-signup', confirmSignUpOTP);
 /**
  * @swagger
  * /auth/resend-signup-otp:
- *   post:
+ *   put:
  *     summary: Resend OTP for user signup
  *     tags: [Auth]
  *     description: Resends the OTP to the user if the previous OTP has expired or was not received.
