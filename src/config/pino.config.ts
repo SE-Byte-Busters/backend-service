@@ -5,6 +5,9 @@ import pinoHttp from 'pino-http';
 const rfs = require('rotating-file-stream');
 import path from 'path';
 import { Request, Response } from 'express-serve-static-core';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // change to ini file
 const logDirectory = path.join(__dirname, '../../logs');
