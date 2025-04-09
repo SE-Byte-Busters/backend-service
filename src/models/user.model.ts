@@ -51,6 +51,14 @@ const userSchema = new Schema<IUser>(
 			default: false,
 			required: true,
 		},
+		profileKey: {
+			type: String,
+			require: false,
+		},
+		profileUrl: {
+			type: String,
+			require: false,
+		},
 		status: {
 			type: Number,
 			default: 0,

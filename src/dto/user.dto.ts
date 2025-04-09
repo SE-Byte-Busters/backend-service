@@ -10,6 +10,8 @@ export interface IUser extends Document {
 	firstName?: string;
 	lastName?: string;
 	isVerified: boolean;
+	profileKey?: string;
+	profileUrl?: string;
 	status?: number;
 	lastOTPAttempt: Date;
 	createdAt: Date;
@@ -31,6 +33,8 @@ export const userSchema = z.object({
 	firstName: z.string().optional(),
 	lastName: z.string().optional(),
 	isVerified: z.boolean(),
+	profileKey: z.string().optional(),
+	profileUrl: z.string().optional(),
 	status: z.number().optional(),
 	lastOTPAttempt: z.date(),
 }).strict();
