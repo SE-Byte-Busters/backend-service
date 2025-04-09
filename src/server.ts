@@ -1,11 +1,12 @@
 import app from './app';
 import dotenv from 'dotenv';
 import http from 'http';
-import { connectMongoDB, disconnectMongoDB } from './config';
+import { connectMongoDB, disconnectMongoDB, initializeMinioBuckets } from './config';
 
 
 dotenv.config();
 connectMongoDB();
+initializeMinioBuckets();
 
 const PORT = process.env.PORT || 3000;
 
