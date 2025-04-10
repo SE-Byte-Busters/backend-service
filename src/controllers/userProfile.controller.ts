@@ -1,5 +1,5 @@
 import { Response } from 'express'; 
-import { uploadProfileImageService, updateUserProfileService, updateUserPasswordService } from '../services/';
+import { uploadProfileImageService, updateUserProfileService, updateUserPasswordService, getScoreAndRank } from '../services/';
 import { CustomError, InternalServerError } from '../utils';
 import { logger } from '../config';
 import { AuthenticatedRequest } from '../dto';
@@ -66,3 +66,23 @@ export const updateUserPassword = async (req: AuthenticatedRequest, res: Respons
 	}
 };
 
+
+export const scoreAndRank = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+	try { 
+		const userId = req._id;
+		if (!userId || typeof userId !== 'string') {
+			res.status(403).json({ message: 'User ID is missing in headers.' });
+		} else {
+			const result = await getScoreAndRank(userId);
+
+			res.status(200).json({ message: 'User Score and Rank.', data: result });
+		}
+	} catch (error) {
+		if (error instanceof CustomError) {
+			res.status(error.statusCode).json({ message: error.message });
+		} else {
+			logger.error(`[Error] Local Error Handler: (UploadProfileImageController) \n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};

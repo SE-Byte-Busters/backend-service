@@ -113,3 +113,23 @@ export const updateUserPasswordService = async (
 	user.password = hashedPassword;
 	await user.save();
 };
+
+
+// -------------------------------------------------------------------------------
+export const getScoreAndRank = async (_id: string) => {
+	const score = await ScoreAndBadge.findOne({ user: _id });
+	if (!score) {
+		throw new NotFoundError('User not found');
+	}
+
+	const rank = await ScoreAndBadge.countDocuments({ score: { $gt: score.score }, });
+
+	return {
+		_id: score.user,
+		score: score.score,
+		rank: rank + 1,
+		username: score.username,
+	};
+};
+
+// -------------------------------------------------------------------------------
