@@ -1,5 +1,6 @@
 import User from '../models/user.model';
 import OTP from '../models/otp.model';
+import ScoreAndBadge from '../models/scoreAndBadge.model';
 import { IUser, UserInput } from '../dto';
 import { BadRequestError, ForbiddenError, NotFoundError, UnauthorizedError } from '../utils';
 import { sendOTP, generateOTP } from '../utils';
@@ -69,6 +70,10 @@ export const verifyOTP = async (
 		user.password = await user.hashPassword(user.password);
 		user.isVerified = true;
 		await user.save();
+
+		const score = await ScoreAndBadge.create({ 
+			user: user._id, username: user.username, score: 0, badges: []
+		});
 	} else {
 		throw new ForbiddenError('User related to OTP not found.');
 	}

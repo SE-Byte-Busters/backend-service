@@ -4,6 +4,7 @@ import path from 'path';
 import bcrypt from 'bcrypt';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError, UnauthorizedError } from '../utils';
 import { MinioBuckets, logger, config } from '../config';
+import ScoreAndBadge from '../models/scoreAndBadge.model';
 
 // -------------------------------------------------------------------------------
 export const uploadProfileImageService = async (
@@ -65,14 +66,23 @@ export const updateUserProfileService = async (
 		}
 		user.email = email;
 	}
-	if (username !== undefined) {
-		user.username = username;
-	}
 	if (firstName !== undefined) {
 		user.firstName = firstName;
 	}
 	if (lastName !== undefined) {
 		user.lastName = lastName;
+	}
+	if (username !== undefined && username !== user.username) {
+		user.username = username;
+		const score = await ScoreAndBadge.findOne({ user: user._id });
+		if(score) {
+			score.username = username;
+			await score.save();
+		} else {
+			await ScoreAndBadge.create({ 
+				user: user._id, username: user.username, score: 0, badges: [] 
+			});
+		}
 	}
 	await user.save();
 
