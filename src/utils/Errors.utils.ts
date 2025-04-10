@@ -46,6 +46,12 @@ export class NotAcceptable extends CustomError {
 	}
 }
 
+export class ConflictError extends CustomError {
+	constructor(message = 'Conflict') {
+		super(message, 409);
+	}
+}
+
 export class InternalServerError extends CustomError {
 	constructor(message = 'Internal Server Error') {
 		super(message, 500);
