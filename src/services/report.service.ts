@@ -71,3 +71,41 @@ export async function createReportWithImages(params: CreateReportParams) {
 		throw error;
 	}
 };
+
+
+// ------------------------------------------------------------------------
+interface GetUserReportsParams {
+	userId: string;
+	page?: number;
+	limit?: number;
+	sortBy?: 'newest' | 'oldest' | 'score';
+}
+
+export async function getUserReports({ userId, page = 1, limit = 10, sortBy = 'newest' }: GetUserReportsParams) {
+	try {
+		const query = { user: userId };
+
+		let sortOption = {};
+		switch (sortBy) {
+			case 'oldest':
+				sortOption = { createdAt: 1 };
+				break;
+			case 'score':
+				sortOption = { score: -1 };
+				break;
+			case 'newest':
+			default:
+				sortOption = { createdAt: -1 };
+		}
+
+		const [reports, total] = await Promise.all([
+			Report.find(query).sort(sortOption).skip((page - 1) * limit).limit(limit).lean(),
+			Report.countDocuments(query)
+		]);
+
+		return { reports, total, page, totalPages: Math.ceil(total / limit) };
+	} catch (error) {
+		console.error('Error fetching user reports:', error);
+		throw new Error('Failed to fetch user reports');
+	}
+};
