@@ -86,6 +86,11 @@ const ReportSchema = new Schema<IReport>({
 		type: Number, 
 		default: 0 
 	},
+	score: {
+		type: Number,
+		default: 0,
+		required: true,
+	},
 	voteScore: { 
 		type: Number, default: 0 
 	},

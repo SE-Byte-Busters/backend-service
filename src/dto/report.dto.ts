@@ -19,6 +19,7 @@ export interface IReport extends Document {
 	resolvedBy?: Types.ObjectId;
 	approvalStatus: number;
 	status: number;
+	score: number;
 	voteScore: number;
 	votes: { user: Types.ObjectId, direction: 'Up' | 'Down' }[];
 	comments: { user: Types.ObjectId, text: string, date: Date }[];
