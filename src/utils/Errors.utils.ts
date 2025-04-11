@@ -52,6 +52,12 @@ export class ConflictError extends CustomError {
 	}
 }
 
+export class UnsupportedMediaType extends CustomError {
+	constructor(message = 'Unsupported Media Type') {
+		super(message, 415);
+	}
+}
+
 export class InternalServerError extends CustomError {
 	constructor(message = 'Internal Server Error') {
 		super(message, 500);
