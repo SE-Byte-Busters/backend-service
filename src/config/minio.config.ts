@@ -22,11 +22,11 @@ export const MinioBuckets = {
 		bucket: config.minioBuckets.profileBucketName,
 		init: () => ensureBucketExists(config.minioBuckets.profileBucketName),
 	},
-	// reports: {
-	// 	client: minioClient,
-	// 	bucket: config.minioBuckets.reportBucketName,
-	// 	init: () => ensureBucketExists(config.minioBuckets.reportBucketName),
-	// },
+	reports: {
+		client: minioClient,
+		bucket: config.minioBuckets.reportBucketName,
+		init: () => ensureBucketExists(config.minioBuckets.reportBucketName),
+	},
 };
 
 export async function initializeMinioBuckets() {

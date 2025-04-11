@@ -15,4 +15,10 @@ export const config = {
 		profileBucketName: process.env.MINIO_USER_PROFILE_BUCKET || 'user-photos',
 		reportBucketName: process.env.MINIO_USER_REPORTS || 'user-report',
 	},
+	MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
+	ALLOWED_MIME_TYPES: [
+		'image/jpeg',
+		'image/png',
+		'image/webp',
+	],
 };
