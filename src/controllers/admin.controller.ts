@@ -1,5 +1,5 @@
 import { Response } from 'express'; 
-import { uploadAdminProfileImageService, updateAdminProfileService, updateAdminPasswordService } from '../services/';
+import { uploadAdminProfileImageService, updateAdminProfileService, updateAdminPasswordService, adminGetPendingReportService } from '../services/';
 import { CustomError, InternalServerError } from '../utils';
 import { logger } from '../config';
 import { AuthenticatedRequest } from '../dto';
@@ -55,6 +55,38 @@ export const updateAdminPassword = async (req: AuthenticatedRequest, res: Respon
 			await updateAdminPasswordService({ _id: userId, oldPassword: req.body.oldPassword, newPassword: req.body.newPassword });
 
 			res.status(200).json({ message: 'Password updated successfully.', data: undefined });
+		}
+	} catch (error) {
+		if (error instanceof CustomError) {
+			res.status(error.statusCode).json({ message: error.message });
+		} else {
+			logger.error(`[Error] Local Error Handler: (UploadProfileImageController) \n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+
+export const getPendingReportController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+	try { 
+		// check for admin role
+		const userId = req._id;
+		let { page, limit, sortBy } = req.query;
+		if (!userId || typeof userId !== 'string') {
+			res.status(403).json({ message: 'User ID is missing in headers.' });
+		} else if (!page || !limit || !sortBy) {
+			res.status(400).json({ message: 'Parameter is missing.' });
+		} else {
+			const pageNumber = page ? parseInt(page as string) : 1;
+			const limitNumber = limit ? parseInt(limit as string) : 10;
+			const sortByString = sortBy as string || 'oldest';
+
+			if (isNaN(pageNumber) || isNaN(limitNumber)) {
+				res.status(400).json({ message: 'Invalid page or limit value.' });
+				return;
+			}
+			const result = await adminGetPendingReportService(pageNumber, limitNumber, sortByString);
+
+			res.status(200).json({ message: 'Pending reports.', data: result });
 		}
 	} catch (error) {
 		if (error instanceof CustomError) {

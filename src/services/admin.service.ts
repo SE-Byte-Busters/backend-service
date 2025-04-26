@@ -1,5 +1,6 @@
-import { Admin } from '../models';
+import { Admin, Report } from '../models';
 import { v4 as uuidv4 } from 'uuid';
+import { SortOrder } from 'mongoose';
 import path from 'path';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError, UnauthorizedError } from '../utils';
 import { MinioBuckets, logger, config } from '../config';
@@ -102,3 +103,24 @@ export const updateAdminPasswordService = async (
 	admin.password = hashedPassword;
 	await admin.save();
 };
+
+
+// -------------------------------------------------------------------------------
+export const adminGetPendingReportService = async ( page:number = 1, limit:number = 10, sortBy:string = 'oldest' ) => {
+	limit = Math.max(1, Math.min(limit, 100)); // Limit to max 100 per page
+
+	// Create sort object based on sortBy parameter
+	const sortOrder: SortOrder = sortBy === 'oldest' ? 1 : -1;
+	const sort = { createdAt: sortOrder };
+
+	// Execute query with pagination
+	const [reports, total] = await Promise.all([
+		Report.find({ approvalStatus: 0 }).sort(sort).skip((page - 1) * limit).limit(limit).exec(),
+		Report.countDocuments({ approvalStatus: 0 }).exec()
+	]);
+
+	// Calculate total pages
+	const pages = Math.ceil(total / limit);
+
+	return { reports, total, page, pages };
+}
