@@ -1,20 +1,26 @@
 import express from 'express';
-import { handleUploadProfileImage, scoreAndRank, updateUserPassword, updateUserProfile } from '../controllers';
+import { handleAdminUploadProfileImage, updateAdminPassword, updateAdminProfile, getPendingReportController } from '../controllers';
 import { uploadProfileImage, authenticateToken, partialAccess } from '../middleware';
 
+/**
+ * @swagger
+ * tags:
+ *   name: Admin
+ *   description: Admin operations
+ */
 const router = express.Router();
 
 /**
  * @swagger
- * /user-profile/update-profile-image:
+ * /admin/update-profile-image:
  *   put:
- *     summary: Update user profile image
+ *     summary: Update admin profile image
  *     description: |
- *       Uploads a new profile image for the authenticated user.
+ *       Uploads a new profile image for the authenticated admin.
  *       - Replaces existing profile image if one exists
  *       - Accepts JPEG, PNG, GIF, WEBP images (max 4MB)
  *       - Returns new profile URL
- *     tags: [User]
+ *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -63,7 +69,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       403:
- *         description: Forbidden (invalid permissions or user not found)
+ *         description: Forbidden (invalid permissions or admin not found)
  *         content:
  *           application/json:
  *             schema:
@@ -81,46 +87,22 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+router.put('/update-profile-image', authenticateToken, uploadProfileImage, handleAdminUploadProfileImage);
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Error:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           example: Error message describing what went wrong
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *   parameters:
- *     profileImageParam:
- *       in: formData
- *       name: profileImage
- *       type: file
- *       description: The profile image to upload
- *       required: true
- */
-router.put('/update-profile-image', authenticateToken, uploadProfileImage, handleUploadProfileImage);
-
-/**
- * @swagger
- * /user-profile/update-profile:
+ * /admin/update-profile:
  *   post:
- *     summary: Update user profile information
+ *     summary: Update admin profile information
  *     description: |
- *       Updates basic user profile information including:
+ *       Updates basic admin profile information including:
  *       - First name
  *       - Last name
  *       - Username
  *       - Email
  *       
  *       Note: Changing username updates associated scoreboard entries
- *     tags: [User]
+ *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -221,35 +203,18 @@ router.put('/update-profile-image', authenticateToken, uploadProfileImage, handl
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+router.post('/update-profile', authenticateToken, updateAdminProfile);
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Error:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           example: Error message describing what went wrong
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- */
-router.post('/update-profile', authenticateToken, updateUserProfile);
-
-/**
- * @swagger
- * /user-profile/update-password:
+ * /admin/update-password:
  *   post:
- *     summary: Update user password
+ *     summary: Update admin password
  *     description: |
- *       Updates the authenticated user's password after verifying the old password.
+ *       Updates the authenticated admin's password after verifying the old password.
  *       - Requires valid current password
  *       - New password will be hashed before storage
- *     tags: [User]
+ *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -326,40 +291,44 @@ router.post('/update-profile', authenticateToken, updateUserProfile);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+router.post('/update-password', authenticateToken, updateAdminPassword);
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Error:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           example: Error message describing what went wrong
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- */
-router.post('/update-password', authenticateToken, updateUserPassword);
-
-/**
- * @swagger
- * /user-profile/score-and-rank:
+ * /admin/get-pending-reports:
  *   get:
- *     summary: Get user's score and global rank
- *     description: |
- *       Retrieves the authenticated user's current score and global ranking.
- *       - Rank is calculated based on users with higher scores
- *       - Returns username along with score/rank data
- *     tags: [User]
+ *     tags:
+ *       - Admin
+ *     summary: Get pending reports awaiting approval
+ *     description: Retrieve a paginated list of reports with approvalStatus=0 (pending approval)
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: The page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of items per page (max 100)
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [oldest, newest]
+ *           default: oldest
+ *         description: Sort order - 'oldest' or 'newest'
  *     responses:
  *       200:
- *         description: Successfully retrieved score and rank
+ *         description: Successfully retrieved pending reports
  *         content:
  *           application/json:
  *             schema:
@@ -367,65 +336,76 @@ router.post('/update-password', authenticateToken, updateUserPassword);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: User Score and Rank.
+ *                   example: Pending reports retrieved successfully.
  *                 data:
  *                   type: object
  *                   properties:
- *                     _id:
- *                       type: string
- *                       example: 507f1f77bcf86cd799439011
- *                     score:
- *                       type: number
- *                       example: 1500
- *                     rank:
- *                       type: number
- *                       description: 1-based global ranking
+ *                     reports:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Report'
+ *                     total:
+ *                       type: integer
  *                       example: 42
- *                     username:
- *                       type: string
- *                       example: john_doe
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     pages:
+ *                       type: integer
+ *                       example: 5
+ *       400:
+ *         description: Bad request - invalid parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
- *         description: Unauthorized (missing or invalid token)
+ *         description: Unauthorized - missing or invalid token
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
- *         description: Forbidden (invalid permissions)
+ *         description: Forbidden - user ID missing
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: User score data not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
+router.get('/get-pending-reports', authenticateToken, getPendingReportController);
 
 /**
  * @swagger
  * components:
- *   schemas:
- *     Error:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           example: Error message describing what went wrong
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
+ *  schemas:
+ *    Report:
+ *      type: object
+ *      properties:
+ *        user:
+ *          type: string
+ *          description: ID of the user who created the report
+ *        title:
+ *          type: string
+ *        description:
+ *          type: string
+ *        # ... other report properties from your interface
+ *    ErrorResponse:
+ *      type: object
+ *      properties:
+ *        message:
+ *          type: string
+ *  securitySchemes:
+ *    bearerAuth:
+ *      type: http
+ *      scheme: bearer
+ *      bearerFormat: JWT
  */
-router.get('/score-and-rank', authenticateToken, scoreAndRank);
+
 
 export default router;

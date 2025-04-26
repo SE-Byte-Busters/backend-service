@@ -5,7 +5,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/auth/signup:
+ * /auth/signup:
  *   post:
  *     summary: User Signup
  *     description: Registers a new user and sends an OTP for verification.
