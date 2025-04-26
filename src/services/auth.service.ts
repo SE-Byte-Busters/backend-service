@@ -6,6 +6,7 @@ import { BadRequestError, ForbiddenError, NotFoundError, UnauthorizedError } fro
 import { sendOTP, generateOTP } from '../utils';
 import mongoose, { Types } from 'mongoose';
 import jwt from 'jsonwebtoken';
+import Admin from '../models/admin.model';
 
 export const signupService = async (userData: UserInput) => {
 	const { phoneNumber, email } = userData;
@@ -111,9 +112,21 @@ export const sendAgainOTP = async (_id: string, method: string, position: string
 
 export const loginService = async (phoneNumber: string, email: string, password: string): 
 	Promise<{ token: string, role: string }> => {
-	const user = await User.findOne({ $or: [{ phoneNumber }, { email }] });
+	let user = await User.findOne({ $or: [{ phoneNumber }, { email }] });
 	if(!user) {
-		throw new NotFoundError("Username/Password is not valid.");
+		const admin = await Admin.findOne({ $or: [{ phoneNumber }, { email }] });
+		if(!admin){
+			throw new NotFoundError("Username/Password is not valid.");
+		}
+		const isPasswordValid = await admin.comparePassword(password);
+		if(!isPasswordValid) {
+			throw new NotFoundError("Username/Password is not valid.");
+		}
+
+		const jwtToken = jwt.sign({ _id: admin._id }
+			, process.env.JWT_SECRET || 'Random128BitHexString', { expiresIn: '2h' }); // change to ini file 'userExpirationTime'
+
+		return { token: jwtToken, role: 'admin' };
 	} else if (!user.isVerified) {
 		throw new UnauthorizedError("Plaese verify your account to login.");
 	}
