@@ -6,7 +6,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /update-profile-image:
+ * /user-profile/update-profile-image:
  *   put:
  *     summary: Update user profile image
  *     description: |
@@ -109,7 +109,7 @@ router.put('/update-profile-image', authenticateToken, uploadProfileImage, handl
 
 /**
  * @swagger
- * /update-profile:
+ * /user-profile/update-profile:
  *   post:
  *     summary: Update user profile information
  *     description: |
@@ -242,7 +242,7 @@ router.post('/update-profile', authenticateToken, updateUserProfile);
 
 /**
  * @swagger
- * /update-password:
+ * /user-profile/update-password:
  *   post:
  *     summary: Update user password
  *     description: |
@@ -347,7 +347,7 @@ router.post('/update-password', authenticateToken, updateUserPassword);
 
 /**
  * @swagger
- * /score-and-rank:
+ * /user-profile/score-and-rank:
  *   get:
  *     summary: Get user's score and global rank
  *     description: |
