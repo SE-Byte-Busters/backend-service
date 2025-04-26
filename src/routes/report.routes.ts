@@ -2,6 +2,13 @@ import express from 'express';
 import { reportUpload, authenticateToken, partialAccess } from '../middleware';
 import { createReportController, getUserReportsController } from '../controllers';
 
+/**
+ * @swagger
+ * tags:
+ *   name: Reports
+ *   description: User report operations
+ */
+
 const router = express.Router();
 
 
@@ -117,8 +124,12 @@ const router = express.Router();
  *               enum: [Point, Area]
  *             coordinates:
  *               type: array
+ *               minItems: 2
+ *               maxItems: 2
  *               items:
  *                 type: number
+ *                 format: double
+ *               example: [-73.987654, 40.748817]
  *         city:
  *           type: string
  *         category:
@@ -160,13 +171,6 @@ const router = express.Router();
  *       bearerFormat: JWT
  */
 router.post('/create-report', authenticateToken, reportUpload, createReportController);
-
-/**
- * @swagger
- * tags:
- *   name: Reports
- *   description: User report operations
- */
 
 /**
  * @swagger
