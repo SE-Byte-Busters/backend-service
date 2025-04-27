@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../dto';
-import { createReportWithImages, getUserReports } from '../services';
+import { createReportWithImages, getUserReports, searchReportsInMapArea, searchReportsNearLocation } from '../services';
 import { logger } from '../config';
 import { BadRequestError, UnauthorizedError, InternalServerError, CustomError } from '../utils';
 
@@ -102,3 +102,112 @@ export const getUserReportsController = async (req: AuthenticatedRequest, res: R
 		}
 	}
 };
+
+
+// ---------------------------------------------------------------------------------
+export async function searchInMapBounds(req: AuthenticatedRequest, res: Response) {
+	try {
+		const { neLat, neLng, swLat, swLng, filter, zoom } = req.query;
+
+		// Validate coordinates
+		if (!neLat || !neLng || !swLat || !swLng) {
+			throw new BadRequestError('Map bounds coordinates are required');
+		}
+
+		const bounds = {
+			ne: {
+				lat: parseFloat(neLat as string),
+				lng: parseFloat(neLng as string)
+			},
+			sw: {
+				lat: parseFloat(swLat as string),
+				lng: parseFloat(swLng as string)
+			}
+		};
+
+		// Validate coordinate values
+		if (isNaN(bounds.ne.lat) || isNaN(bounds.ne.lng) || 
+				isNaN(bounds.sw.lat) || isNaN(bounds.sw.lng)) {
+			throw new BadRequestError('Invalid coordinate values');
+		}
+
+		// Validate filter parameter
+		const validFilters = ['all', 'done', 'notDone'];
+		const completionFilter = validFilters.includes(filter as string) 
+			? filter as 'all' | 'done' | 'notDone' 
+			: 'all';
+
+		const zoomLevel = zoom ? parseInt(zoom as string) : undefined;
+
+		const reports = await searchReportsInMapArea({
+			bounds,
+			completionFilter,
+			zoomLevel
+		});
+
+		res.status(200).json({
+			message: "Reports",
+			data: reports
+		});
+
+	} catch (error) {
+		if (error instanceof CustomError) {
+			res.status(error.statusCode).json({ message: error.message });
+		} else {
+			logger.error(`[Error] Local Error Handler: (UploadProfileImageController) \n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+}
+
+
+// ---------------------------------------------------------------------------------
+export async function searchNearLocation(req: AuthenticatedRequest, res: Response) {
+	try {
+		const { lat, lng, radius, filter } = req.query;
+
+		// Validate coordinates
+		if (!lat || !lng) {
+			throw new BadRequestError('Center coordinates are required');
+		}
+
+		const center = {
+			lat: parseFloat(lat as string),
+			lng: parseFloat(lng as string)
+		};
+
+		if (isNaN(center.lat) || isNaN(center.lng)) {
+			throw new BadRequestError('Invalid coordinate values');
+		}
+
+		const radiusInMeters = radius ? parseInt(radius as string) : 5000;
+		if (isNaN(radiusInMeters) || radiusInMeters <= 0) {
+			throw new CustomError('Invalid radius value', 400);
+		}
+
+		// Validate filter parameter
+		const validFilters = ['all', 'done', 'notDone'];
+		const completionFilter = validFilters.includes(filter as string) 
+			? filter as 'all' | 'done' | 'notDone' 
+			: 'all';
+
+		const reports = await searchReportsNearLocation(
+			center,
+			radiusInMeters,
+			completionFilter
+		);
+
+		res.status(200).json({
+			message: "Reports",
+			data: reports
+		});
+
+	} catch (error) {
+		if (error instanceof CustomError) {
+			res.status(error.statusCode).json({ message: error.message });
+		} else {
+			logger.error(`[Error] Local Error Handler: (UploadProfileImageController) \n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+}

@@ -1,5 +1,7 @@
 import Report from '../models/report.model';
 import { MinioBuckets, config } from '../config';
+import { Model } from 'mongoose';
+import { IReport } from '../dto';
 import { BadRequestError } from '../utils';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -109,3 +111,83 @@ export async function getUserReports({ userId, page = 1, limit = 10, sortBy = 'n
 		throw new Error('Failed to fetch user reports');
 	}
 };
+
+
+// ------------------------------------------------------------------------
+interface MapSearchOptions {
+	bounds: {
+		ne: { lat: number; lng: number };
+		sw: { lat: number; lng: number };
+	};
+	completionFilter?: 'all' | 'done' | 'notDone';
+	zoomLevel?: number;
+}
+
+export async function searchReportsInMapArea(options: MapSearchOptions): Promise<IReport[]> {
+	const { bounds, completionFilter = 'all', zoomLevel } = options;
+	
+	// Create GeoJSON polygon for the map bounds
+	const polygon = {
+		type: 'Polygon',
+		coordinates: [[
+			[bounds.sw.lng, bounds.sw.lat],
+			[bounds.ne.lng, bounds.sw.lat],
+			[bounds.ne.lng, bounds.ne.lat],
+			[bounds.sw.lng, bounds.ne.lat],
+			[bounds.sw.lng, bounds.sw.lat] // Close the polygon
+		]]
+	};
+
+	// Build the query conditions
+	const queryConditions: any = {
+		'location.coordinates': {
+			$geoWithin: {
+				$geometry: polygon
+			}
+		}
+	};
+
+	// Add completion status filter if specified
+	if (completionFilter !== 'all') {
+		queryConditions.completionStatus = completionFilter === 'done' ? 
+			{ $in: [1] } : // Done status
+			{ $nin: [2] }; // Not done status
+	}
+
+	// For better performance at higher zoom levels (more detailed view)
+	const limit = zoomLevel && zoomLevel > 10 ? 500 : 200;
+
+	return Report.find(queryConditions)
+		.limit(limit)
+		.lean()
+		.exec();
+}
+
+// Alternative method for point-radius search
+export async function searchReportsNearLocation(
+	center: { lat: number; lng: number },
+	radiusInMeters: number,
+	completionFilter?: 'all' | 'done' | 'notDone'
+): Promise<IReport[]> {
+	const queryConditions: any = {
+		'location.coordinates': {
+			$geoWithin: {
+				$centerSphere: [
+					[center.lng, center.lat],
+					radiusInMeters / 6378137 // Convert meters to radians
+				]
+			}
+		}
+	};
+
+	if (completionFilter && completionFilter !== 'all') {
+		queryConditions.completionStatus = completionFilter === 'done' ? 
+			{ $in: [1, 2] } : 
+			{ $nin: [1, 2] };
+	}
+
+	return Report.find(queryConditions)
+		.limit(200)
+		.lean()
+		.exec();
+}

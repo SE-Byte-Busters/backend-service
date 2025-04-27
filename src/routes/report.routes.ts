@@ -1,6 +1,6 @@
 import express from 'express';
 import { reportUpload, authenticateToken, partialAccess } from '../middleware';
-import { createReportController, getUserReportsController } from '../controllers';
+import { createReportController, getUserReportsController, searchInMapBounds, searchNearLocation } from '../controllers';
 
 /**
  * @swagger
@@ -313,5 +313,187 @@ router.post('/create-report', authenticateToken, reportUpload, createReportContr
  *       bearerFormat: JWT
  */
 router.get('/reports', authenticateToken, getUserReportsController);
+
+
+/**
+ * @swagger
+ * /report/map-search:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Search reports within map bounds
+ *     description: Returns reports within specified geographic bounding box, with optional filters
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: neLat
+ *         required: true
+ *         schema:
+ *           type: number
+ *           format: double
+ *           example: 40.7128
+ *         description: Northeast corner latitude (decimal degrees)
+ *       - in: query
+ *         name: neLng
+ *         required: true
+ *         schema:
+ *           type: number
+ *           format: double
+ *           example: -74.0060
+ *         description: Northeast corner longitude (decimal degrees)
+ *       - in: query
+ *         name: swLat
+ *         required: true
+ *         schema:
+ *           type: number
+ *           format: double
+ *           example: 40.6900
+ *         description: Southwest corner latitude (decimal degrees)
+ *       - in: query
+ *         name: swLng
+ *         required: true
+ *         schema:
+ *           type: number
+ *           format: double
+ *           example: -74.0500
+ *         description: Southwest corner longitude (decimal degrees)
+ *       - in: query
+ *         name: filter
+ *         schema:
+ *           type: string
+ *           enum: [all, done, notDone]
+ *           default: all
+ *           example: notDone
+ *         description: |
+ *           Filter by completion status:
+ *           - all = All reports
+ *           - done = Only completed reports (status 1 or 2)
+ *           - notDone = Only incomplete reports
+ *       - in: query
+ *         name: zoom
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *           maximum: 22
+ *           example: 12
+ *         description: Current map zoom level (affects result limit for performance)
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved reports within bounds
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Reports
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Report'
+ *       400:
+ *         description: Bad request - invalid coordinates or parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/map-search', partialAccess, searchInMapBounds);
+
+
+/**
+ * @swagger
+ * /report/nearby-search:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Search reports near a location
+ *     description: Returns reports within specified radius of a geographic point, with optional completion status filtering
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: lat
+ *         required: true
+ *         schema:
+ *           type: number
+ *           format: double
+ *           example: 40.7128
+ *         description: Latitude of the center point (decimal degrees)
+ *       - in: query
+ *         name: lng
+ *         required: true
+ *         schema:
+ *           type: number
+ *           format: double
+ *           example: -74.0060
+ *         description: Longitude of the center point (decimal degrees)
+ *       - in: query
+ *         name: radius
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 5000
+ *           example: 2000
+ *         description: Search radius in meters (default 5000m)
+ *       - in: query
+ *         name: filter
+ *         schema:
+ *           type: string
+ *           enum: [all, done, notDone]
+ *           default: all
+ *           example: notDone
+ *         description: |
+ *           Filter by completion status:
+ *           - all = All reports
+ *           - done = Only completed reports (status 1 or 2)
+ *           - notDone = Only incomplete reports
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved nearby reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Reports
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Report'
+ *       400:
+ *         description: Bad request - invalid parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/nearby-search', partialAccess, searchNearLocation);
 
 export default router;
