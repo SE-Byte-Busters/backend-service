@@ -5,6 +5,8 @@ import { IReport } from '../dto';
 import { BadRequestError } from '../utils';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import mongoose from 'mongoose';
+
 
 interface CreateReportParams {
 	user: string;
@@ -66,7 +68,7 @@ export async function createReportWithImages(params: CreateReportParams) {
 	} catch (error) {
 		if (uploadedImages.length > 0) {
 			await Promise.all(
-				uploadedImages.map(img => client.removeObject(bucket, img.key) )
+				uploadedImages.map(img => client.removeObject(bucket, img.key))
 			);
 		};
 
@@ -125,7 +127,7 @@ interface MapSearchOptions {
 
 export async function searchReportsInMapArea(options: MapSearchOptions): Promise<IReport[]> {
 	const { bounds, completionFilter = 'all', zoomLevel } = options;
-	
+
 	// Create GeoJSON polygon for the map bounds
 	const polygon = {
 		type: 'Polygon',
@@ -149,7 +151,7 @@ export async function searchReportsInMapArea(options: MapSearchOptions): Promise
 
 	// Add completion status filter if specified
 	if (completionFilter !== 'all') {
-		queryConditions.completionStatus = completionFilter === 'done' ? 
+		queryConditions.completionStatus = completionFilter === 'done' ?
 			{ $in: [1] } : // Done status
 			{ $nin: [2] }; // Not done status
 	}
@@ -181,8 +183,8 @@ export async function searchReportsNearLocation(
 	};
 
 	if (completionFilter && completionFilter !== 'all') {
-		queryConditions.completionStatus = completionFilter === 'done' ? 
-			{ $in: [1, 2] } : 
+		queryConditions.completionStatus = completionFilter === 'done' ?
+			{ $in: [1, 2] } :
 			{ $nin: [1, 2] };
 	}
 
@@ -191,3 +193,55 @@ export async function searchReportsNearLocation(
 		.lean()
 		.exec();
 }
+
+
+export const addCommentService = async (reportId: string, userId: string | undefined, text: string) => {
+	if (!mongoose.Types.ObjectId.isValid(reportId)) {
+		throw new BadRequestError('Invalid Report ID');
+	}
+
+	if (!text || typeof text !== 'string' || text.trim().length === 0) {
+		throw new BadRequestError('Comment text is required');
+	}
+
+	const report = await Report.findById(reportId);
+	if (!report) {
+		throw new BadRequestError('Report not found');
+
+	}
+	if (!userId) {
+		throw new BadRequestError('User not found');
+	}
+	if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
+		throw new BadRequestError('Invalid User ID');
+	}
+
+	const Id = new mongoose.Types.ObjectId(userId);
+
+	report.comments.push({
+		user: Id,
+		text: text.trim(),
+		date: new Date(),
+	});
+	await report.save();
+
+	return {
+		message: 'Comment added successfully',
+		reportId: report._id,
+		comment: report.comments.at(-1),
+	};
+};
+
+
+export const getReportCommentsService = async (reportId: string) => {
+	if (!mongoose.Types.ObjectId.isValid(reportId)) {
+		throw new BadRequestError('Invalid Report ID');
+	}
+
+	const report = await Report.findById(reportId).lean();
+	if (!report) {
+		throw new BadRequestError('Report not found');
+	}
+
+	return report.comments;
+};

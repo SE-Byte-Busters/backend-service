@@ -1,6 +1,6 @@
 import express from 'express';
 import { reportUpload, authenticateToken, partialAccess } from '../middleware';
-import { createReportController, getUserReportsController, searchInMapBounds, searchNearLocation } from '../controllers';
+import { addReportCommentController, createReportController, getReportCommentsController, getUserReportsController, searchInMapBounds, searchNearLocation } from '../controllers';
 
 /**
  * @swagger
@@ -495,5 +495,80 @@ router.get('/map-search', partialAccess, searchInMapBounds);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/nearby-search', partialAccess, searchNearLocation);
+/**
+ * @swagger
+ * /reports/{reportId}/comments:
+ *   post:
+ *     summary: Add a comment to a report
+ *     tags:
+ *       - Reports
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the report
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               text:
+ *                 type: string
+ *                 example: This is a sample comment
+ *     responses:
+ *       201:
+ *         description: Comment added successfully
+ *       400:
+ *         description: Invalid request
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/reports/:reportId/comments', authenticateToken, addReportCommentController);
+
+/**
+ * @swagger
+ * /reports/{reportId}/comments:
+ *   get:
+ *     summary: Get comments of a report
+ *     tags:
+ *       - Reports
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the report
+ *     responses:
+ *       200:
+ *         description: List of comments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   user:
+ *                     type: string
+ *                     format: id
+ * 
+ *                   text:
+ *                     type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/reports/:reportId/comments', authenticateToken, getReportCommentsController);
 
 export default router;

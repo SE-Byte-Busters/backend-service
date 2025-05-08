@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../dto';
-import { createReportWithImages, getUserReports, searchReportsInMapArea, searchReportsNearLocation } from '../services';
+import { addCommentService, createReportWithImages, getReportCommentsService, getUserReports, searchReportsInMapArea, searchReportsNearLocation } from '../services';
 import { logger } from '../config';
 import { BadRequestError, UnauthorizedError, InternalServerError, CustomError } from '../utils';
 
@@ -29,7 +29,7 @@ export const createReportController = async (req: AuthenticatedRequest, res: Res
 			throw new BadRequestError('At least one image is required');
 		}
 
-		if(!req._id){
+		if (!req._id) {
 			throw new UnauthorizedError('User ID is missing in headers');
 		}
 
@@ -44,11 +44,12 @@ export const createReportController = async (req: AuthenticatedRequest, res: Res
 			images: req.files as Express.Multer.File[]
 		});
 
-		res.status(201).json({ message: 'Report created successfully.',
-				report: {
-					...report.toObject(),
-					// Optionally remove sensitive fields
-				}
+		res.status(201).json({
+			message: 'Report created successfully.',
+			report: {
+				...report.toObject(),
+				// Optionally remove sensitive fields
+			}
 		});
 
 	} catch (error) {
@@ -81,7 +82,8 @@ export const getUserReportsController = async (req: AuthenticatedRequest, res: R
 
 		const result = await getUserReports({ userId, page, limit, sortBy });
 
-		res.json({ message: "Reports",
+		res.json({
+			message: "Reports",
 			data: {
 				reports: result.reports,
 				pagination: {
@@ -126,15 +128,15 @@ export async function searchInMapBounds(req: AuthenticatedRequest, res: Response
 		};
 
 		// Validate coordinate values
-		if (isNaN(bounds.ne.lat) || isNaN(bounds.ne.lng) || 
-				isNaN(bounds.sw.lat) || isNaN(bounds.sw.lng)) {
+		if (isNaN(bounds.ne.lat) || isNaN(bounds.ne.lng) ||
+			isNaN(bounds.sw.lat) || isNaN(bounds.sw.lng)) {
 			throw new BadRequestError('Invalid coordinate values');
 		}
 
 		// Validate filter parameter
 		const validFilters = ['all', 'done', 'notDone'];
-		const completionFilter = validFilters.includes(filter as string) 
-			? filter as 'all' | 'done' | 'notDone' 
+		const completionFilter = validFilters.includes(filter as string)
+			? filter as 'all' | 'done' | 'notDone'
 			: 'all';
 
 		const zoomLevel = zoom ? parseInt(zoom as string) : undefined;
@@ -187,8 +189,8 @@ export async function searchNearLocation(req: AuthenticatedRequest, res: Respons
 
 		// Validate filter parameter
 		const validFilters = ['all', 'done', 'notDone'];
-		const completionFilter = validFilters.includes(filter as string) 
-			? filter as 'all' | 'done' | 'notDone' 
+		const completionFilter = validFilters.includes(filter as string)
+			? filter as 'all' | 'done' | 'notDone'
 			: 'all';
 
 		const reports = await searchReportsNearLocation(
@@ -211,3 +213,49 @@ export async function searchNearLocation(req: AuthenticatedRequest, res: Respons
 		}
 	}
 }
+
+// ---------------------------------------------------------------------------------
+// am
+export const addReportCommentController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+	try {
+		const { reportId } = req.params;
+		const { text } = req.body;
+
+		if (!text || text.length > 500) {
+			throw new BadRequestError('Comment text is required and must be less than 500 characters.');
+		}
+
+		await addCommentService(reportId, req._id, text);
+
+		res.status(201).json({ message: 'Comment added successfully.' });
+	} catch (error) {
+		if (error instanceof BadRequestError) {
+			res.status(400).json({ message: error.message });
+		} else {
+			logger.error(`[Error] addReportCommentController\n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+
+// ---------------------------------------------------------------------------------
+// am
+export const getReportCommentsController = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const { reportId } = req.params;
+
+		const comments = await getReportCommentsService(reportId);
+
+		res.status(200).json({
+			comments,
+		});
+	} catch (error) {
+		// مدیریت خطا
+		if (error instanceof BadRequestError) {
+			res.status(404).json({ message: error.message });
+		} else {
+			logger.error(`[Error] getReportCommentsController\n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
