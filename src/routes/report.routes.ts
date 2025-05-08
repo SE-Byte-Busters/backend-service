@@ -571,4 +571,5 @@ router.post('/reports/:reportId/comments', authenticateToken, addReportCommentCo
  */
 router.get('/reports/:reportId/comments', authenticateToken, getReportCommentsController);
 
+
 export default router;
