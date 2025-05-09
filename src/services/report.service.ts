@@ -1,7 +1,7 @@
 import Report from '../models/report.model';
 import { MinioBuckets, config } from '../config';
-import { Model } from 'mongoose';
-import { IReport } from '../dto';
+import { Model, Mongoose } from 'mongoose';
+import { CommentWithUser, IReport, IUser } from '../dto';
 import { BadRequestError } from '../utils';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -233,15 +233,35 @@ export const addCommentService = async (reportId: string, userId: string | undef
 };
 
 
-export const getReportCommentsService = async (reportId: string) => {
+
+
+
+export const getReportCommentsService = async (
+	reportId: string
+): Promise<CommentWithUser[]> => {
 	if (!mongoose.Types.ObjectId.isValid(reportId)) {
 		throw new BadRequestError('Invalid Report ID');
 	}
 
-	const report = await Report.findById(reportId).lean();
-	if (!report) {
-		throw new BadRequestError('Report not found');
+	const report = await Report.findById(reportId)
+		.populate<{ comments: CommentWithUser[] }>({
+			path: 'comments.user',
+			select: 'username'
+		})
+		.lean()
+		.exec();
+
+	if (!report || !report.comments) {
+		throw new BadRequestError('Report not found or has no comments');
 	}
 
-	return report.comments;
+	return report.comments.map(comment => ({
+		_id: comment._id,
+		user: {
+			_id: comment.user._id,
+			username: comment.user.username
+		},
+		text: comment.text,
+		date: comment.date
+	}));
 };

@@ -531,11 +531,14 @@ router.get('/nearby-search', partialAccess, searchNearLocation);
  */
 router.post('/reports/:reportId/comments', authenticateToken, addReportCommentController);
 
+
+
 /**
  * @swagger
  * /reports/{reportId}/comments:
  *   get:
- *     summary: Get comments of a report
+ *     summary: Get report comments
+ *     description: Retrieve all comments for a specific report including user details
  *     tags:
  *       - Reports
  *     security:
@@ -546,28 +549,76 @@ router.post('/reports/:reportId/comments', authenticateToken, addReportCommentCo
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the report
+ *           format: ObjectId
+ *           example: "507f1f77bcf86cd799439011"
+ *         description: ID of the report to retrieve comments for
  *     responses:
  *       200:
- *         description: List of comments
+ *         description: Successful operation - Returns array of comments
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   user:
- *                     type: string
- *                     format: id
- * 
- *                   text:
- *                     type: string
- *                   createdAt:
- *                     type: string
- *                     format: date-time
+ *               type: object
+ *               properties:
+ *                 comments:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: Bad request - Invalid report ID format
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized - Missing or invalid authentication token
+ *       404:
+ *         description: Not found - Report with specified ID doesn't exist
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Comment:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           format: ObjectId
+ *           example: "681c83bc922332ca7a7f2265"
+ *           description: Unique identifier of the comment
+ *         user:
+ *           $ref: '#/components/schemas/CommentUser'
+ *           description: User who created the comment
+ *         text:
+ *           type: string
+ *           example: "This is a serious issue that needs immediate attention"
+ *           description: Content of the comment
+ *         date:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-05-08T10:13:16.719Z"
+ *           description: Date and time when comment was created
+ *       required:
+ *         - _id
+ *         - user
+ *         - text
+ *         - date
+ * 
+ *     CommentUser:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           format: ObjectId
+ *           example: "680a9ba5ff6ff44d7e6e8757"
+ *           description: Unique identifier of the user
+ *         username:
+ *           type: string
+ *           example: "Amirhossein"
+ *           description: Username of the comment author
+ *       required:
+ *         - _id
+ *         - username
  */
 router.get('/reports/:reportId/comments', authenticateToken, getReportCommentsController);
 

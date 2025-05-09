@@ -1,12 +1,13 @@
 import { Document, Types } from "mongoose";
 import { z } from 'zod';
+import { IUser } from "./user.dto";
 
 export interface IReport extends Document {
 	user: Types.ObjectId;
 	title: string;
 	description: string;
 	approximatePosition: string;
-	location: { 
+	location: {
 		type: 'Point' | 'Area';
 		coordinates: number[];
 	};
@@ -23,4 +24,15 @@ export interface IReport extends Document {
 	voteScore: number;
 	votes: { user: Types.ObjectId, direction: 'Up' | 'Down' }[];
 	comments: { user: Types.ObjectId, text: string, date: Date }[];
+}
+
+
+export interface CommentWithUser {
+	_id: Types.ObjectId;
+	user: {
+		_id: Types.ObjectId;
+		username: string;
+	};
+	text: string;
+	date: Date;
 }

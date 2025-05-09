@@ -43,3 +43,4 @@ export type UserInput = z.infer<typeof userSchema>;
 
 // Define a schema for updating a user (partial fields allowed)
 export const updateUserSchema = userSchema.partial();
+
