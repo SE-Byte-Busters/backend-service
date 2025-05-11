@@ -24,6 +24,7 @@ export interface IReport extends Document {
 	voteScore: number;
 	votes: { user: Types.ObjectId, direction: 'Up' | 'Down' }[];
 	comments: { user: Types.ObjectId, text: string, date: Date }[];
+	usersReqSolve: { user: Types.ObjectId, text: string, date: Date }[];
 }
 
 

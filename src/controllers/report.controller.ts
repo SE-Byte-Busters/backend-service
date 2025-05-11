@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../dto';
-import { addCommentService, createReportWithImages, getReportCommentsService, getUserReports, searchReportsInMapArea, searchReportsNearLocation } from '../services';
+import { addCommentService, addReqSolveReportService, createReportWithImages, getReportByIdService, getReportCommentsService, getReqSolvesReportService, getUserReports, searchReportsInMapArea, searchReportsNearLocation, setReportResolvedByService, updatePriorityAndApprovalStatus } from '../services';
 import { logger } from '../config';
 import { BadRequestError, UnauthorizedError, InternalServerError, CustomError } from '../utils';
 
@@ -255,6 +255,106 @@ export const getReportCommentsController = async (req: Request, res: Response): 
 			res.status(404).json({ message: error.message });
 		} else {
 			logger.error(`[Error] getReportCommentsController\n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+
+// ---------------------------------------------------------------------------------
+// am
+export const addReqSolveReportController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+	try {
+		const { reportId } = req.params;
+		const { text } = req.body;
+
+		if (!text || text.length > 500) {
+			throw new BadRequestError('Req Solved text is required and must be less than 500 characters.');
+		}
+
+		await addReqSolveReportService(reportId, req._id, text);
+
+		res.status(201).json({ message: 'Req Solved added successfully.' });
+	} catch (error) {
+		if (error instanceof BadRequestError) {
+			res.status(400).json({ message: error.message });
+		} else {
+			logger.error(`[Error] addReqSolveReportController\n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+// ---------------------------------------------------------------------------------
+// am
+export const getReqSolvesReportController = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const { reportId } = req.params;
+
+		const usersReqSovled = await getReqSolvesReportService(reportId);
+
+		res.status(200).json({
+			usersReqSovled,
+		});
+	} catch (error) {
+		// مدیریت خطا
+		if (error instanceof BadRequestError) {
+			res.status(404).json({ message: error.message });
+		} else {
+			logger.error(`[Error] getReqSolvesReportController\n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+// ---------------------------------------------------------------------------------
+// am
+export const setReportResolvedByController = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const { reportId, userId } = req.params;
+
+		const result = await setReportResolvedByService(reportId, userId);
+
+		res.status(200).json(result);
+	} catch (error) {
+		if (error instanceof BadRequestError) {
+			res.status(400).json({ message: error.message });
+		} else {
+			logger.error(`[setReportResolvedByController] Unexpected error: ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+// ---------------------------------------------------------------------------------
+// am
+export const getReportByIdController = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const { reportId } = req.params;
+
+
+		const report = await getReportByIdService(reportId);
+		res.status(200).json({ report });
+	} catch (error) {
+		if (error instanceof BadRequestError) {
+			res.status(404).json({ message: error.message });
+		} else {
+			console.error(error);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+// ---------------------------------------------------------------------------------
+// just admin access to this api
+export const updateReportStatusController = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const { reportId } = req.params;
+		const { priority, approvalStatus } = req.body;
+
+		const result = await updatePriorityAndApprovalStatus(reportId, { priority, approvalStatus });
+
+		res.status(200).json(result);
+	} catch (error) {
+		if (error instanceof BadRequestError) {
+			res.status(400).json({ message: error.message });
+		} else {
+			console.error(error);
 			res.status(500).json({ message: new InternalServerError().message });
 		}
 	}

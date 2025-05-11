@@ -2,17 +2,17 @@ import { Document, Schema, Model, Types, model } from 'mongoose';
 import { IReport } from '../dto';
 
 const ReportSchema = new Schema<IReport>({
-	user: { 
-		type: Schema.Types.ObjectId, ref: 'User', required: true 
+	user: {
+		type: Schema.Types.ObjectId, ref: 'User', required: true
 	},
-	title: { 
-		type: String, required: true, maxlength: 100 
+	title: {
+		type: String, required: true, maxlength: 100
 	},
-	description: { 
-		type: String, maxlength: 1000 
+	description: {
+		type: String, maxlength: 1000
 	},
-	approximatePosition: { 
-		type: String 
+	approximatePosition: {
+		type: String
 	},
 	location: {
 		type: {
@@ -25,7 +25,7 @@ const ReportSchema = new Schema<IReport>({
 			type: [Number],
 			required: true,
 			validate: {
-				validator: function(coords: number[]) {
+				validator: function (coords: number[]) {
 					if (this.location.type === 'Point') {
 						return (
 							coords.length === 2 &&
@@ -47,11 +47,11 @@ const ReportSchema = new Schema<IReport>({
 			}
 		}
 	},
-	city: { 
+	city: {
 		type: String, required: true
 	},
-	category: { 
-		type: [String], 
+	category: {
+		type: [String],
 		required: true,
 		default: ['Other']
 	},
@@ -61,43 +61,49 @@ const ReportSchema = new Schema<IReport>({
 		default: 'Medium'
 	},
 	images: {
-		type: [{ 
+		type: [{
 			key: { type: String, required: true },
 			url: { type: String, required: true },
 		}],
 		default: [],
 		max: 5,
 	},
-	completionStatus: { 
+	completionStatus: {
 		type: Number, default: 0
 	},
-	resolvedAt: { 
-		type: Date 
+	resolvedAt: {
+		type: Date
 	},
-	resolvedBy: { 
-		type: Schema.Types.ObjectId, ref: 'User' 
+	resolvedBy: {
+		type: Schema.Types.ObjectId, ref: 'User'
 	},
-	approvalStatus: { 
+	usersReqSolve: [{
+		user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+		text: { type: String, required: true, maxlength: 500 }, // change to ini
+		date: { type: Date, default: Date.now }
+	}]
+	,
+	approvalStatus: {
 		type: Number,
 		enum: [0, 1, 2], // 0=Pending, 1=Approved, 2=Rejected
 		default: 0,
 	},
-	status: { 
-		type: Number, 
-		default: 0 
+	status: {
+		type: Number,
+		default: 0
 	},
 	score: {
 		type: Number,
 		default: 0,
 		required: true,
 	},
-	voteScore: { 
-		type: Number, default: 0 
+	voteScore: {
+		type: Number, default: 0
 	},
 	votes: {
-		type: [{ 
+		type: [{
 			user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-			direction: { type: String, enum: ['Up', 'Down']}, 
+			direction: { type: String, enum: ['Up', 'Down'] },
 		}],
 		default: [],
 	},
@@ -106,18 +112,18 @@ const ReportSchema = new Schema<IReport>({
 		text: { type: String, required: true, maxlength: 500 }, // change to ini
 		date: { type: Date, default: Date.now }
 	}]
-},{
+}, {
 	timestamps: true,
-	toJSON: { 
+	toJSON: {
 		virtuals: true,  // to include virtual fields
-		transform: function(doc, ret) {
+		transform: function (doc, ret) {
 			delete ret.__v;
 			return ret;
 		}
 	},
 	toObject: {
 		virtuals: true,
-		transform: function(doc, ret) {
+		transform: function (doc, ret) {
 			delete ret.__v;
 			return ret;
 		},
@@ -138,11 +144,11 @@ ReportSchema.index({
 // 	return `${this.approximatePosition}, ${this.city}`;
 // });
 
-ReportSchema.virtual('isResolved').get(function() {
+ReportSchema.virtual('isResolved').get(function () {
 	return this.resolvedAt !== undefined;
 });
 
-ReportSchema.pre<IReport>('save', function(next) {
+ReportSchema.pre<IReport>('save', function (next) {
 	if (this.isModified('location')) {
 		if (this.location.type === 'Point' && this.location.coordinates.length !== 2) {
 			throw new Error('Point locations require exactly 2 coordinates [longitude, latitude].');

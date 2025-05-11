@@ -1,6 +1,6 @@
 import express from 'express';
 import { reportUpload, authenticateToken, partialAccess } from '../middleware';
-import { addReportCommentController, createReportController, getReportCommentsController, getUserReportsController, searchInMapBounds, searchNearLocation } from '../controllers';
+import { addReportCommentController, addReqSolveReportController, createReportController, getReportByIdController, getReportCommentsController, getReqSolvesReportController, getUserReportsController, searchInMapBounds, searchNearLocation, setReportResolvedByController, updateReportStatusController } from '../controllers';
 
 /**
  * @swagger
@@ -314,7 +314,6 @@ router.post('/create-report', authenticateToken, reportUpload, createReportContr
  */
 router.get('/reports', authenticateToken, getUserReportsController);
 
-
 /**
  * @swagger
  * /report/map-search:
@@ -412,7 +411,6 @@ router.get('/reports', authenticateToken, getUserReportsController);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/map-search', partialAccess, searchInMapBounds);
-
 
 /**
  * @swagger
@@ -531,8 +529,6 @@ router.get('/nearby-search', partialAccess, searchNearLocation);
  */
 router.post('/reports/:reportId/comments', authenticateToken, addReportCommentController);
 
-
-
 /**
  * @swagger
  * /reports/{reportId}/comments:
@@ -621,6 +617,184 @@ router.post('/reports/:reportId/comments', authenticateToken, addReportCommentCo
  *         - username
  */
 router.get('/reports/:reportId/comments', authenticateToken, getReportCommentsController);
+
+/**
+ * @swagger
+ * /reports/{reportId}/reqsolved:
+ *   post:
+ *     summary: Add a solve request to a report
+ *     description: Submit a comment indicating that the user has attempted to solve the report.
+ *     tags:
+ *       - Reports
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the report
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - text
+ *             properties:
+ *               text:
+ *                 type: string
+ *                 example: "این مشکل را دیروز بنده بررسی کردم و حل کردم"
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Solve request added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Request added successfully"
+ *                 reportId:
+ *                   type: string
+ *                   example: "681f8af4be5792d7b1e6943f"
+ *                 request:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: string
+ *                       example: "680a9ba5ff6ff44d7e6e8757"
+ *                     text:
+ *                       type: string
+ *                       example: "این مشکل را دیروز بنده بررسی کردم و حل کردم"
+ *                     date:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-05-10T17:20:52.166Z"
+ *       400:
+ *         description: Invalid input (missing text or invalid report/user ID)
+ *       401:
+ *         description: Unauthorized
+ */
+
+router.post('/reports/:reportId/reqsolved', authenticateToken, addReqSolveReportController);
+
+/**
+ * @swagger
+ * /reports/{reportId}/reqsolved:
+ *   get:
+ *     summary: Get all solve requests for a specific report
+ *     description: Returns a list of users who requested to solve the report, along with their comment and date.
+ *     tags:
+ *       - Reports
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the report
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of solve requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 usersReqSovled:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "681f8af4be5792d7b1e6943f"
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "680a9ba5ff6ff44d7e6e8757"
+ *                           username:
+ *                             type: string
+ *                             example: "Amirhossein"
+ *                       text:
+ *                         type: string
+ *                         example: "این مشکل را به سختی حل کردم"
+ *                       date:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-05-10T17:20:52.166Z"
+ *       400:
+ *         description: Invalid report ID or report not found
+ *       401:
+ *         description: Unauthorized
+ */
+
+router.get('/reports/:reportId/reqsolved', authenticateToken, getReqSolvesReportController);
+
+/**
+ * @swagger
+ * /reports/{reportId}/resolve/{userId}:
+ *   post:
+ *     summary: Mark a report as resolved
+ *     description: Set the user who resolved the report and timestamp the resolution.
+ *     tags:
+ *       - Reports
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the report to be marked as resolved
+ *       - in: path
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the user who resolved the report
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Report successfully marked as resolved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Report marked as resolved"
+ *                 resolvedBy:
+ *                   type: string
+ *                   example: "680a9ba5ff6ff44d7e6e8757"
+ *                 resolvedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-05-10T17:53:23.336Z"
+ *       400:
+ *         description: Invalid report ID or user ID
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post('/reports/:reportId/resolve/:userId', authenticateToken, setReportResolvedByController);
+router.get('/reports/:reportId/', authenticateToken, getReportByIdController);
+
+
+
+
+
 
 
 export default router;

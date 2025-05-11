@@ -264,4 +264,161 @@ export const getReportCommentsService = async (
 		text: comment.text,
 		date: comment.date
 	}));
+
+};
+
+
+export const addReqSolveReportService = async (
+	reportId: string,
+	userId: string | undefined,
+	text: string
+) => {
+	if (!mongoose.Types.ObjectId.isValid(reportId)) {
+		throw new BadRequestError('Invalid report ID');
+	}
+
+	if (!text || typeof text !== 'string' || text.trim().length === 0) {
+		throw new BadRequestError('Request text is required');
+	}
+
+	const report = await Report.findById(reportId);
+	if (!report) {
+		throw new BadRequestError('Report not found');
+	}
+
+	if (!userId) {
+		throw new BadRequestError('User ID is required');
+	}
+	if (!mongoose.Types.ObjectId.isValid(userId)) {
+		throw new BadRequestError('Invalid user ID');
+	}
+
+	const userObjectId = new mongoose.Types.ObjectId(userId);
+
+	const newRequest = {
+		user: userObjectId,
+		text: text.trim(),
+		date: new Date(),
+	};
+
+	report.usersReqSolve.push(newRequest);
+	await report.save();
+
+	return {
+		message: 'Request added successfully',
+		reportId: report._id,
+		request: newRequest,
+	};
+};
+
+
+export const getReqSolvesReportService = async (
+	reportId: string
+): Promise<CommentWithUser[]> => {
+	if (!mongoose.Types.ObjectId.isValid(reportId)) {
+		throw new BadRequestError('Invalid report ID');
+	}
+
+	const report = await Report.findById(reportId)
+		.populate<{ usersReqSolve: CommentWithUser[] }>({
+			path: 'usersReqSolve.user',
+			select: 'username'
+		})
+		.lean()
+		.exec();
+
+	if (!report || !report.usersReqSolve) {
+		throw new BadRequestError('Report not found or has no solve requests');
+	}
+
+	return report.usersReqSolve.map((reqSolve) => ({
+		_id: reqSolve._id,
+		user: {
+			_id: reqSolve.user._id,
+			username: reqSolve.user.username
+		},
+		text: reqSolve.text,
+		date: reqSolve.date
+	}));
+};
+
+export const setReportResolvedByService = async (
+	reportId: string,
+	userId: string
+): Promise<{ message: string; resolvedBy: string; resolvedAt: Date }> => {
+	if (!mongoose.Types.ObjectId.isValid(reportId)) {
+		throw new BadRequestError('Invalid report ID');
+	}
+	if (!mongoose.Types.ObjectId.isValid(userId)) {
+		throw new BadRequestError('Invalid user ID');
+	}
+
+	const report = await Report.findById(reportId);
+	if (!report) {
+		throw new BadRequestError('Report not found');
+	}
+
+	report.resolvedBy = new mongoose.Types.ObjectId(userId);
+	report.resolvedAt = new Date();
+	await report.save();
+
+	return {
+		message: 'Report marked as resolved',
+		resolvedBy: userId,
+		resolvedAt: report.resolvedAt
+	};
+};
+
+
+export const getReportByIdService = async (reportId: string) => {
+	if (!mongoose.Types.ObjectId.isValid(reportId)) {
+		throw new BadRequestError('Invalid report ID');
+	}
+
+	const report = await Report.findById(reportId)
+		.populate('user', 'username')
+		.lean()
+		.exec();
+
+	if (!report) {
+		throw new BadRequestError('Report not found');
+	}
+
+	return report;
+};
+
+export const updatePriorityAndApprovalStatus = async (
+	reportId: string,
+	data: { priority: string; approvalStatus: number }
+) => {
+	if (!mongoose.Types.ObjectId.isValid(reportId)) {
+		throw new BadRequestError('Invalid report ID');
+	}
+
+	const { priority, approvalStatus } = data;
+
+	if (!['High', 'Medium', 'Low'].includes(priority)) {
+		throw new BadRequestError('Invalid priority value');
+	}
+
+	if (![0, 1, 2].includes(approvalStatus)) {
+		throw new BadRequestError('Invalid approval status value');
+	}
+
+	const report = await Report.findById(reportId);
+	if (!report) {
+		throw new BadRequestError('Report not found');
+	}
+
+	report.priority = priority as 'High' | 'Medium' | 'Low';
+	report.approvalStatus = approvalStatus;
+
+	await report.save();
+
+	return {
+		message: 'Priority and approval status updated successfully',
+		reportId: report._id,
+		priority: report.priority,
+		approvalStatus: report.approvalStatus
+	};
 };

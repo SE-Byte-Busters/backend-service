@@ -1,5 +1,5 @@
 import express from 'express';
-import { handleAdminUploadProfileImage, updateAdminPassword, updateAdminProfile, getPendingReportController } from '../controllers';
+import { handleAdminUploadProfileImage, updateAdminPassword, updateAdminProfile, getPendingReportController, getStatedReportController, updateReportStatusController } from '../controllers';
 import { uploadProfileImage, authenticateToken, partialAccess } from '../middleware';
 
 /**
@@ -379,6 +379,64 @@ router.post('/update-password', authenticateToken, updateAdminPassword);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/get-pending-reports', authenticateToken, getPendingReportController);
+
+
+// getStatedReportController
+router.get('/get-stated-reports', authenticateToken, getStatedReportController);
+
+
+/**
+ * @swagger
+ * /admin/reports/{reportId}:
+ *   put:
+ *     summary: Update the priority and approval status of a report
+ *     description: Updates the priority and approval status of a specific report.
+ *     tags:
+ *       - Admin
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         description: The ID of the report to update
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: report
+ *         description: The priority and approval status to update the report with
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             priority:
+ *               type: string
+ *               enum: [High, Medium, Low]
+ *               description: The priority of the report
+ *             approvalStatus:
+ *               type: integer
+ *               enum: [0, 1, 2]
+ *               description: The approval status of the report (0=Pending, 1=Approved, 2=Rejected)
+ *     responses:
+ *       200:
+ *         description: Successfully updated the report
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 reportId:
+ *                   type: string
+ *                 priority:
+ *                   type: string
+ *                 approvalStatus:
+ *                   type: integer
+ *       400:
+ *         description: Invalid request, bad parameters or missing fields
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/reports/:reportId/', authenticateToken, updateReportStatusController);
 
 /**
  * @swagger

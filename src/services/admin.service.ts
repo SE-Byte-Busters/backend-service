@@ -45,13 +45,13 @@ export const uploadAdminProfileImageService = async (
 
 
 // -------------------------------------------------------------------------------
-interface UpdateAdminProfileDTO { 
-	_id: string; firstName?: string; lastName?: string; username?: string; email?: string; 
+interface UpdateAdminProfileDTO {
+	_id: string; firstName?: string; lastName?: string; username?: string; email?: string;
 };
 
 export const updateAdminProfileService = async (
 	{ _id, firstName, lastName, username, email, }: UpdateAdminProfileDTO
-) => { 
+) => {
 	const admin = await Admin.findById(_id);
 
 	if (!admin) {
@@ -88,7 +88,7 @@ interface UpdatePasswordParams { _id: string; oldPassword: string; newPassword: 
 
 export const updateAdminPasswordService = async (
 	{ _id, oldPassword, newPassword, }: UpdatePasswordParams
-) => { 
+) => {
 	const admin = await Admin.findById(_id)
 	if (!admin) {
 		throw new NotFoundError('Admin not found');
@@ -106,7 +106,7 @@ export const updateAdminPasswordService = async (
 
 
 // -------------------------------------------------------------------------------
-export const adminGetPendingReportService = async ( page:number = 1, limit:number = 10, sortBy:string = 'oldest' ) => {
+export const adminGetPendingReportService = async (page: number = 1, limit: number = 10, sortBy: string = 'oldest') => {
 	limit = Math.max(1, Math.min(limit, 100)); // Limit to max 100 per page
 
 	// Create sort object based on sortBy parameter
@@ -117,6 +117,27 @@ export const adminGetPendingReportService = async ( page:number = 1, limit:numbe
 	const [reports, total] = await Promise.all([
 		Report.find({ approvalStatus: 0 }).sort(sort).skip((page - 1) * limit).limit(limit).exec(),
 		Report.countDocuments({ approvalStatus: 0 }).exec()
+	]);
+
+	// Calculate total pages
+	const pages = Math.ceil(total / limit);
+
+	return { reports, total, page, pages };
+}
+
+// -------------------------------------------------------------------------------
+// wait
+export const adminGetStatedReportService = async (page: number = 1, limit: number = 10, sortBy: string = 'oldest') => {
+	limit = Math.max(1, Math.min(limit, 100)); // Limit to max 100 per page
+
+	// Create sort object based on sortBy parameter
+	const sortOrder: SortOrder = sortBy === 'oldest' ? 1 : -1;
+	const sort = { createdAt: sortOrder };
+
+	// Execute query with pagination
+	const [reports, total] = await Promise.all([
+		Report.find({ approvalStatus: 1 || 2 }).sort(sort).skip((page - 1) * limit).limit(limit).exec(),
+		Report.countDocuments({ approvalStatus: 1 || 2 }).exec()
 	]);
 
 	// Calculate total pages
