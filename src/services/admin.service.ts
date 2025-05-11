@@ -134,10 +134,12 @@ export const adminGetStatedReportService = async (page: number = 1, limit: numbe
 	const sortOrder: SortOrder = sortBy === 'oldest' ? 1 : -1;
 	const sort = { createdAt: sortOrder };
 
+	const filter = { approvalStatus: { $in: [1, 2] } };
+
 	// Execute query with pagination
 	const [reports, total] = await Promise.all([
-		Report.find({ approvalStatus: 1 || 2 }).sort(sort).skip((page - 1) * limit).limit(limit).exec(),
-		Report.countDocuments({ approvalStatus: 1 || 2 }).exec()
+		Report.find(filter).sort(sort).skip((page - 1) * limit).limit(limit).exec(),
+		Report.countDocuments(filter).exec()
 	]);
 
 	// Calculate total pages
@@ -145,3 +147,4 @@ export const adminGetStatedReportService = async (page: number = 1, limit: numbe
 
 	return { reports, total, page, pages };
 }
+

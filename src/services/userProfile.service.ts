@@ -46,13 +46,13 @@ export const uploadProfileImageService = async (
 
 
 // -------------------------------------------------------------------------------
-interface UpdateUserProfileDTO { 
-	_id: string; firstName?: string; lastName?: string; username?: string; email?: string; 
+interface UpdateUserProfileDTO {
+	_id: string; firstName?: string; lastName?: string; username?: string; email?: string;
 };
 
 export const updateUserProfileService = async (
 	{ _id, firstName, lastName, username, email, }: UpdateUserProfileDTO
-) => { 
+) => {
 	const user = await User.findById(_id);
 
 	if (!user) {
@@ -75,12 +75,12 @@ export const updateUserProfileService = async (
 	if (username !== undefined && username !== user.username) {
 		user.username = username;
 		const score = await ScoreAndBadge.findOne({ user: user._id });
-		if(score) {
+		if (score) {
 			score.username = username;
 			await score.save();
 		} else {
-			await ScoreAndBadge.create({ 
-				user: user._id, username: user.username, score: 0, badges: [] 
+			await ScoreAndBadge.create({
+				user: user._id, username: user.username, score: 0, badges: []
 			});
 		}
 	}
@@ -98,7 +98,7 @@ interface UpdatePasswordParams { _id: string; oldPassword: string; newPassword: 
 
 export const updateUserPasswordService = async (
 	{ _id, oldPassword, newPassword, }: UpdatePasswordParams
-) => { 
+) => {
 	const user = await User.findById(_id)
 	if (!user) {
 		throw new NotFoundError('User not found');
@@ -116,6 +116,8 @@ export const updateUserPasswordService = async (
 
 
 // -------------------------------------------------------------------------------
+
+
 export const getScoreAndRank = async (_id: string) => {
 	const score = await ScoreAndBadge.findOne({ user: _id });
 	if (!score) {
