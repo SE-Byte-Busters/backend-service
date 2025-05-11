@@ -1,5 +1,5 @@
 import express from 'express';
-import { handleAdminUploadProfileImage, updateAdminPassword, updateAdminProfile, getPendingReportController, getStatedReportController, updateReportStatusController } from '../controllers';
+import { handleAdminUploadProfileImage, updateAdminPassword, updateAdminProfile, getPendingReportController, getStatedReportController, updateReportStatusController, getReportByIdController } from '../controllers';
 import { uploadProfileImage, authenticateToken, partialAccess } from '../middleware';
 
 /**
@@ -381,7 +381,70 @@ router.post('/update-password', authenticateToken, updateAdminPassword);
 router.get('/get-pending-reports', authenticateToken, getPendingReportController);
 
 
-// getStatedReportController
+/**
+ * @swagger
+ * /admin/get-stated-reports:
+ *   get:
+ *     summary: Get reports with specific statuses (admin only)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     description: |
+ *       Retrieves a paginated and optionally sorted list of reports with specific statuses.
+ *       Only accessible by admin users.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 1
+ *         required: false
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 10
+ *         required: false
+ *         description: Number of reports per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           example: createdAt
+ *         required: false
+ *         description: Field to sort the results by (e.g., createdAt, priority, etc.)
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 reports:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Report'
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 totalPages:
+ *                   type: integer
+ *                   example: 5
+ *                 totalReports:
+ *                   type: integer
+ *                   example: 42
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       403:
+ *         description: Forbidden - User is not admin
+ *       500:
+ *         description: Server error
+ */
 router.get('/get-stated-reports', authenticateToken, getStatedReportController);
 
 
@@ -438,32 +501,154 @@ router.get('/get-stated-reports', authenticateToken, getStatedReportController);
  */
 router.put('/reports/:reportId/', authenticateToken, updateReportStatusController);
 
+
+
 /**
  * @swagger
- * components:
- *  schemas:
- *    Report:
- *      type: object
- *      properties:
- *        user:
- *          type: string
- *          description: ID of the user who created the report
- *        title:
- *          type: string
- *        description:
- *          type: string
- *        # ... other report properties from your interface
- *    ErrorResponse:
- *      type: object
- *      properties:
- *        message:
- *          type: string
- *  securitySchemes:
- *    bearerAuth:
- *      type: http
- *      scheme: bearer
- *      bearerFormat: JWT
+ * /admin/reports/{reportId}/:
+ *   get:
+ *     summary: Get a report by its ID
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: ObjectId
+ *         description: The ID of the report to retrieve
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the report
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 report:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       format: ObjectId
+ *                       example: "67f924e2cbf331ebfcbe5f7e"
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                           format: ObjectId
+ *                           example: "67eba729af9ae825bcfcd935"
+ *                         username:
+ *                           type: string
+ *                           example: "testuser1"
+ *                     title:
+ *                       type: string
+ *                       example: "Pothole on Main Street"
+ *                     description:
+ *                       type: string
+ *                       example: "Large pothole causing traffic issues"
+ *                     approximatePosition:
+ *                       type: string
+ *                       example: "Near Main St and 5th Ave"
+ *                     location:
+ *                       type: object
+ *                       properties:
+ *                         type:
+ *                           type: string
+ *                           example: "Point"
+ *                         coordinates:
+ *                           type: array
+ *                           items:
+ *                             type: number
+ *                           example: [-73.987654, 40.748817]
+ *                     city:
+ *                       type: string
+ *                       example: "New York"
+ *                     category:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["Infrastructure"]
+ *                     priority:
+ *                       type: string
+ *                       example: "High"
+ *                     images:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           key:
+ *                             type: string
+ *                             format: uri
+ *                             example: "https://example.com/image1.png"
+ *                           url:
+ *                             type: string
+ *                             example: "reports/image1.png"
+ *                           _id:
+ *                             type: string
+ *                             format: ObjectId
+ *                     completionStatus:
+ *                       type: integer
+ *                       example: 0
+ *                     approvalStatus:
+ *                       type: integer
+ *                       example: 0
+ *                     status:
+ *                       type: integer
+ *                       example: 0
+ *                     voteScore:
+ *                       type: integer
+ *                       example: 0
+ *                     votes:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Comment'
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-04-11T14:19:14.468Z"
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-05-11T06:20:20.840Z"
+ *                     usersReqSolve:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user:
+ *                             type: string
+ *                             format: ObjectId
+ *                           text:
+ *                             type: string
+ *                           date:
+ *                             type: string
+ *                             format: date-time
+ *                           _id:
+ *                             type: string
+ *                             format: ObjectId
+ *                     resolvedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-05-10T17:53:23.336Z"
+ *                     resolvedBy:
+ *                       type: string
+ *                       format: ObjectId
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       404:
+ *         description: Report not found
+ *       500:
+ *         description: Server error
  */
-
+router.get('/reports/:reportId/', authenticateToken, getReportByIdController);
 
 export default router;

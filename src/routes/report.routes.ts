@@ -789,6 +789,153 @@ router.get('/reports/:reportId/reqsolved', authenticateToken, getReqSolvesReport
  */
 
 router.post('/reports/:reportId/resolve/:userId', authenticateToken, setReportResolvedByController);
+
+/**
+ * @swagger
+ * /reports/{reportId}/:
+ *   get:
+ *     summary: Get a report by its ID
+ *     tags:
+ *       - Reports
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: ObjectId
+ *         description: The ID of the report to retrieve
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the report
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 report:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       format: ObjectId
+ *                       example: "67f924e2cbf331ebfcbe5f7e"
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                           format: ObjectId
+ *                           example: "67eba729af9ae825bcfcd935"
+ *                         username:
+ *                           type: string
+ *                           example: "testuser1"
+ *                     title:
+ *                       type: string
+ *                       example: "Pothole on Main Street"
+ *                     description:
+ *                       type: string
+ *                       example: "Large pothole causing traffic issues"
+ *                     approximatePosition:
+ *                       type: string
+ *                       example: "Near Main St and 5th Ave"
+ *                     location:
+ *                       type: object
+ *                       properties:
+ *                         type:
+ *                           type: string
+ *                           example: "Point"
+ *                         coordinates:
+ *                           type: array
+ *                           items:
+ *                             type: number
+ *                           example: [-73.987654, 40.748817]
+ *                     city:
+ *                       type: string
+ *                       example: "New York"
+ *                     category:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["Infrastructure"]
+ *                     priority:
+ *                       type: string
+ *                       example: "High"
+ *                     images:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           key:
+ *                             type: string
+ *                             format: uri
+ *                             example: "https://example.com/image1.png"
+ *                           url:
+ *                             type: string
+ *                             example: "reports/image1.png"
+ *                           _id:
+ *                             type: string
+ *                             format: ObjectId
+ *                     completionStatus:
+ *                       type: integer
+ *                       example: 0
+ *                     approvalStatus:
+ *                       type: integer
+ *                       example: 0
+ *                     status:
+ *                       type: integer
+ *                       example: 0
+ *                     voteScore:
+ *                       type: integer
+ *                       example: 0
+ *                     votes:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Comment'
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-04-11T14:19:14.468Z"
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-05-11T06:20:20.840Z"
+ *                     usersReqSolve:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user:
+ *                             type: string
+ *                             format: ObjectId
+ *                           text:
+ *                             type: string
+ *                           date:
+ *                             type: string
+ *                             format: date-time
+ *                           _id:
+ *                             type: string
+ *                             format: ObjectId
+ *                     resolvedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-05-10T17:53:23.336Z"
+ *                     resolvedBy:
+ *                       type: string
+ *                       format: ObjectId
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       404:
+ *         description: Report not found
+ *       500:
+ *         description: Server error
+ */
 router.get('/reports/:reportId/', authenticateToken, getReportByIdController);
 
 
