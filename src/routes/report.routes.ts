@@ -1,6 +1,6 @@
 import express from 'express';
 import { reportUpload, authenticateToken, partialAccess } from '../middleware';
-import { addReportCommentController, addReqSolveReportController, createReportController, getReportByIdController, getReportCommentsController, getReqSolvesReportController, getUserReportsController, searchInMapBounds, searchNearLocation, setReportResolvedByController, updateReportStatusController } from '../controllers';
+import { addReportCommentController, addReqSolveReportController, createReportController, getReportByIdController, getReportCommentsController, getReqSolvesReportController, getUserReportsController, searchInMapBounds, searchNearLocation, setReportResolvedByController, updateReportStatusController, voteOnReportController } from '../controllers';
 
 /**
  * @swagger
@@ -738,7 +738,6 @@ router.post('/reports/:reportId/reqsolved', authenticateToken, addReqSolveReport
  */
 
 router.get('/reports/:reportId/reqsolved', authenticateToken, getReqSolvesReportController);
-
 /**
  * @swagger
  * /reports/{reportId}/resolve/{userId}:
@@ -789,6 +788,8 @@ router.get('/reports/:reportId/reqsolved', authenticateToken, getReqSolvesReport
  */
 
 router.post('/reports/:reportId/resolve/:userId', authenticateToken, setReportResolvedByController);
+
+
 
 /**
  * @swagger
@@ -940,7 +941,68 @@ router.get('/reports/:reportId/', authenticateToken, getReportByIdController);
 
 
 
+/**
+ * @swagger
+ * /reports/{reportId}/vote:
+ *   post:
+ *     summary: Vote on a report
+ *     description: Allows an authenticated user to upvote or downvote a report. The number of upvotes and downvotes will be dynamically calculated in the response.
+ *     tags:
+ *       - Reports
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the report to vote on
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - direction
+ *             properties:
+ *               direction:
+ *                 type: string
+ *                 enum: [Up, Down]
+ *                 example: Up
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Vote successfully recorded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Vote recorded successfully"
+ *                 voteScore:
+ *                   type: number
+ *                   example: 5
+ *                 voteUpScore:
+ *                   type: number
+ *                   example: 10
+ *                 voteDownScore:
+ *                   type: number
+ *                   example: 5
+ *                 totalVotes:
+ *                   type: number
+ *                   example: 15
+ *       400:
+ *         description: Invalid report ID, user ID, or vote direction
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
 
+router.post('/reports/:reportId/vote', authenticateToken, voteOnReportController);
 
 
 

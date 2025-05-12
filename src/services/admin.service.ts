@@ -104,7 +104,6 @@ export const updateAdminPasswordService = async (
 	await admin.save();
 };
 
-
 // -------------------------------------------------------------------------------
 export const adminGetPendingReportService = async (page: number = 1, limit: number = 10, sortBy: string = 'oldest') => {
 	limit = Math.max(1, Math.min(limit, 100)); // Limit to max 100 per page

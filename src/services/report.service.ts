@@ -6,6 +6,7 @@ import { BadRequestError } from '../utils';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import mongoose from 'mongoose';
+import { notif } from '../utils/notif.utils';
 
 
 interface CreateReportParams {
@@ -344,12 +345,15 @@ export const getReqSolvesReportService = async (
 
 export const setReportResolvedByService = async (
 	reportId: string,
-	userId: string
+	userId: string | undefined
 ): Promise<{ message: string; resolvedBy: string; resolvedAt: Date }> => {
 	if (!mongoose.Types.ObjectId.isValid(reportId)) {
 		throw new BadRequestError('Invalid report ID');
 	}
-	if (!mongoose.Types.ObjectId.isValid(userId)) {
+	if (!userId) {
+		throw new BadRequestError('Invalid user ID');
+	}
+	if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
 		throw new BadRequestError('Invalid user ID');
 	}
 
@@ -387,6 +391,7 @@ export const getReportByIdService = async (reportId: string) => {
 	return report;
 };
 
+
 export const updatePriorityAndApprovalStatus = async (
 	reportId: string,
 	data: { priority: string; approvalStatus: number }
@@ -405,7 +410,7 @@ export const updatePriorityAndApprovalStatus = async (
 		throw new BadRequestError('Invalid approval status value');
 	}
 
-	const report = await Report.findById(reportId);
+	const report = await Report.findById(reportId).populate('user') as any; // Populate and cast to `any`
 	if (!report) {
 		throw new BadRequestError('Report not found');
 	}
@@ -415,10 +420,85 @@ export const updatePriorityAndApprovalStatus = async (
 
 	await report.save();
 
+	// Explicitly cast the user to IUser type
+	const user = report.user as IUser;
+
+	if (!user || !user.phoneNumber) {
+		throw new BadRequestError('User or phone number not found');
+	}
+
+	// send the phone number to the notification service
+	await notif(user.phoneNumber, report.title, report.approvalStatus); // Example notification service
+
 	return {
 		message: 'Priority and approval status updated successfully',
 		reportId: report._id,
 		priority: report.priority,
-		approvalStatus: report.approvalStatus
+		approvalStatus: report.approvalStatus,
+
+	};
+};
+type VoteDirection = 'Up' | 'Down';
+
+export const voteOnReport = async (
+	reportId: string,
+	data: { userId: string | undefined; direction: VoteDirection }
+) => {
+	const { userId, direction } = data;
+
+	if (!mongoose.Types.ObjectId.isValid(reportId)) {
+		throw new BadRequestError('Invalid report ID');
+	}
+	if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+		throw new BadRequestError('Invalid user ID');
+	}
+	if (!['Up', 'Down'].includes(direction)) {
+		throw new BadRequestError('Invalid vote direction');
+	}
+
+	const report = await Report.findById(reportId);
+	if (!report) {
+		throw new BadRequestError('Report not found');
+	}
+
+	const existingVoteIndex = report.votes.findIndex(
+		(v) => v.user.toString() === userId
+	);
+
+	if (existingVoteIndex > -1) {
+		// به‌روزرسانی رأی قبلی
+		report.votes[existingVoteIndex].direction = direction;
+	} else {
+		// رأی جدید
+		report.votes.push({ user: new mongoose.Types.ObjectId(userId), direction });
+	}
+
+	// محاسبه امتیازهای بدون ذخیره در دیتابیس
+	let voteScore = 0;
+	let voteUpScore = 0;
+	let voteDownScore = 0;
+
+	for (const vote of report.votes) {
+		if (vote.direction === 'Up') {
+			voteUpScore++;
+			voteScore++;
+		} else if (vote.direction === 'Down') {
+			voteDownScore++;
+			voteScore--;
+		}
+	}
+
+	// ذخیره تغییرات فقط در voteScore
+	report.voteScore = voteScore;
+
+	await report.save();
+
+	return {
+		message: 'Vote recorded successfully',
+		reportId: report._id,
+		voteScore: report.voteScore,
+		voteUpScore, // ارسال تعداد Up در خروجی
+		voteDownScore, // ارسال تعداد Down در خروجی
+		totalVotes: report.votes.length
 	};
 };

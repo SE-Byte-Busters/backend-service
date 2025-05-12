@@ -23,7 +23,6 @@ module.exports = {
 			autorestart: true,
 		},
 	],
-
 	deploy: {
 		production: {
 			user: 'SSH_USERNAME',

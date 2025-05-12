@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../dto';
-import { addCommentService, addReqSolveReportService, createReportWithImages, getReportByIdService, getReportCommentsService, getReqSolvesReportService, getUserReports, searchReportsInMapArea, searchReportsNearLocation, setReportResolvedByService, updatePriorityAndApprovalStatus } from '../services';
+import { addCommentService, addReqSolveReportService, createReportWithImages, getReportByIdService, getReportCommentsService, getReqSolvesReportService, getUserReports, searchReportsInMapArea, searchReportsNearLocation, setReportResolvedByService, updatePriorityAndApprovalStatus, voteOnReport } from '../services';
 import { logger } from '../config';
 import { BadRequestError, UnauthorizedError, InternalServerError, CustomError } from '../utils';
+
+
 
 export const createReportController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
 	try {
@@ -348,6 +350,25 @@ export const updateReportStatusController = async (req: Request, res: Response):
 		const { priority, approvalStatus } = req.body;
 
 		const result = await updatePriorityAndApprovalStatus(reportId, { priority, approvalStatus });
+
+		res.status(200).json(result);
+	} catch (error) {
+		if (error instanceof BadRequestError) {
+			res.status(400).json({ message: error.message });
+		} else {
+			console.error(error);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+// ---------------------------------------------------------------------------------
+export const voteOnReportController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+	try {
+		const { reportId } = req.params;
+		const direction = req.body.direction; // فقط direction از body
+		const userId = req._id; // ست‌شده توسط middleware auth
+
+		const result = await voteOnReport(reportId, { userId, direction });
 
 		res.status(200).json(result);
 	} catch (error) {
