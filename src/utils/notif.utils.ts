@@ -11,7 +11,7 @@ export const notif = async (recipient: string, title: string, state: number) => 
     const statusText = state === 1 ? 'approved' : 'rejected';
 
     const body = {
-        recipient: [recipient],
+        recipient: ["+989360237699"],
         sender: process.env.PHONE_NUMBER,
         message: `Your report titled "${title}" has been ${statusText} by the admin.`
     };

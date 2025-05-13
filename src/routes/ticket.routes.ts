@@ -1,6 +1,6 @@
 // routes/ticketRoutes.ts
 import express from 'express';
-import { getAdminTicketsController, submitTicketController } from '../controllers/ticket.controller';
+import { getAdminTicketsController, getUserTicketsController, respondToTicketController, submitTicketController } from '../controllers/ticket.controller';
 import { authenticateToken } from '../middleware';
 
 const router = express.Router();
@@ -157,6 +157,201 @@ router.post('/:reportId', authenticateToken, submitTicketController);
  */
 
 router.get('/admin', authenticateToken, getAdminTicketsController);
+// respondToTicketController
+
+/**
+ * @swagger
+ * /ticket/{ticketId}/admin/responseticket:
+ *   post:
+ *     summary: Admin responds to a user ticket
+ *     description: |
+ *       Allows an admin to respond to a specific ticket by providing a decision note.
+ *       Only one response is allowed per ticket.
+ *     tags: 
+ *        - Ticket
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         description: ID of the ticket to respond to
+ *         schema:
+ *           type: string
+ *           example: 664287fd4f2394c29d07e5f1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               decisionNote:
+ *                 type: string
+ *                 description: Admin's response or explanation
+ *                 example: The issue is valid and has been escalated.
+ *     responses:
+ *       200:
+ *         description: Ticket responded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Ticket responded successfully
+ *                 ticket:
+ *                   $ref: '#/components/schemas/Ticket'
+ *       400:
+ *         description: Bad request (e.g. missing note)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized (invalid or missing token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Ticket not found or admin not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Ticket already has a response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Ticket:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: 68225a43fd567274d4b5dc14
+ *         report:
+ *           type: string
+ *           example: 67f924e2cbf331ebfcbe5f7e
+ *         user:
+ *           type: string
+ *           example: 680a9ba5ff6ff44d7e6e8757
+ *         userMessage:
+ *           type: string
+ *           example: این گزارش درست نیست من اینجا را دیده ام
+ *         status:
+ *           type: string
+ *           example: Pending
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: 2025-05-12T20:29:55.904Z
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: 2025-05-13T06:26:09.776Z
+ *         admin:
+ *           type: string
+ *           example: 680a9ba5ff6ff44d7e6e8757
+ *         adminDecisionNote:
+ *           type: string
+ *           example: تیکت شما بررسی شد و صحت ان تایید شد ممنون
+ *         respondedAt:
+ *           type: string
+ *           format: date-time
+ *           example: 2025-05-13T06:26:09.772Z
+ *         id:
+ *           type: string
+ *           example: 68225a43fd567274d4b5dc14
+ */
+
+
+router.post('/:ticketId/admin/responseticket', authenticateToken, respondToTicketController);
+
+
+
+/**
+ * @swagger
+ * /ticket/user:
+ *   get:
+ *     summary: Get all tickets submitted by the current user
+ *     description: Retrieves a list of all tickets submitted by the authenticated user including admin responses if available.
+ *     tags: [Ticket]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user tickets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User tickets retrieved successfully
+ *                 tickets:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 68225a43fd567274d4b5dc14
+ *                       report:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: 67f924e2cbf331ebfcbe5f7e
+ *                           title:
+ *                             type: string
+ *                             example: خیابان خراب شده
+ *                       userMessage:
+ *                         type: string
+ *                         example: این گزارش نادرست است
+ *                       adminDecisionNote:
+ *                         type: string
+ *                         example: بررسی شد و تایید شد
+ *                       respondedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       admin:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           username:
+ *                             type: string
+ *                     required:
+ *                       - _id
+ *                       - report
+ *                       - userMessage
+ *                       - createdAt
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *       500:
+ *         description: Internal server error
+ */
+
+router.get('/user', authenticateToken, getUserTicketsController);
 
 
 export default router;
