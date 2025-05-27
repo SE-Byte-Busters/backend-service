@@ -134,9 +134,9 @@ export async function searchReportsInMapArea(options: MapSearchOptions): Promise
 		type: 'Polygon',
 		coordinates: [[
 			[bounds.sw.lng, bounds.sw.lat],
-			[bounds.ne.lng, bounds.sw.lat],
-			[bounds.ne.lng, bounds.ne.lat],
 			[bounds.sw.lng, bounds.ne.lat],
+			[bounds.ne.lng, bounds.ne.lat],
+			[bounds.ne.lng, bounds.sw.lat],
 			[bounds.sw.lng, bounds.sw.lat] // Close the polygon
 		]]
 	};
