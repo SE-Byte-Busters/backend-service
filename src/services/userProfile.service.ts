@@ -135,3 +135,12 @@ export const getScoreAndRank = async (_id: string) => {
 };
 
 // -------------------------------------------------------------------------------
+
+
+export const getUserProfile = async (_id: string) => {
+	const user = await User.findById(_id);
+	if (!user) throw new ForbiddenError('User not found.');
+	return user;
+}
+
+// -------------------------------------------------------------------------------

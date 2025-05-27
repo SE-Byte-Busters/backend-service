@@ -1,8 +1,53 @@
 import express from 'express';
-import { handleUploadProfileImage, scoreAndRank, updateUserPassword, updateUserProfile } from '../controllers';
+import { handleUploadProfileImage, scoreAndRank, updateUserPassword, updateUserProfile, userProfile } from '../controllers';
 import { uploadProfileImage, authenticateToken, partialAccess } from '../middleware';
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /user-profile/:
+ *   get:
+ *     summary: Get user profile by ID
+ *     description: Returns the profile of the authenticated user.
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User Profile."
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       403:
+ *         description: Forbidden (invalid/missing user ID or token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found."
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error."
+ */
+router.get("/", authenticateToken, userProfile);
 
 /**
  * @swagger
