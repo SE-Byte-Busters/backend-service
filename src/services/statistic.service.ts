@@ -5,8 +5,8 @@ export const getReportsByDate = async (
 ): Promise<{ _id: string; count: number }[]> => {
     const start = startDate
         ? new Date(startDate)
-        : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 روز پیش
-    const end = new Date(); // زمان فعلی
+        : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = new Date();
 
     const reports = await Report.aggregate([
         {
@@ -96,68 +96,64 @@ export const getUnresolvedAndResolvedReportStats = async (): Promise<any> => {
     const threeDaysAgo = new Date(currentDate);
     threeDaysAgo.setDate(currentDate.getDate() - 3);
 
-    // محاسبه گزارشات حل‌شده و حل‌نشده در یک ماه گذشته
     const totalReportsInLastMonth = await Report.countDocuments({
         createdAt: { $gte: oneMonthAgo },
     });
     const unresolvedReportsInLastMonth = await Report.countDocuments({
         createdAt: { $gte: oneMonthAgo },
-        resolvedAt: { $exists: false }, // بررسی گزارشات حل‌نشده
+        resolvedAt: { $exists: false },
     });
     const resolvedReportsInLastMonth = await Report.countDocuments({
         createdAt: { $gte: oneMonthAgo },
-        resolvedAt: { $ne: null }, // بررسی گزارشات حل‌شده
+        resolvedAt: { $ne: null },
     });
 
     const unresolvedPercentageInLastMonth = totalReportsInLastMonth
         ? (unresolvedReportsInLastMonth / totalReportsInLastMonth) * 100
         : 0;
 
-    // محاسبه گزارشات حل‌شده و حل‌نشده در یک هفته گذشته
     const totalReportsInLastWeek = await Report.countDocuments({
         createdAt: { $gte: oneWeekAgo },
     });
     const unresolvedReportsInLastWeek = await Report.countDocuments({
         createdAt: { $gte: oneWeekAgo },
-        resolvedAt: { $exists: false }, // بررسی گزارشات حل‌نشده
+        resolvedAt: { $exists: false },
     });
     const resolvedReportsInLastWeek = await Report.countDocuments({
         createdAt: { $gte: oneWeekAgo },
-        resolvedAt: { $ne: null }, // بررسی گزارشات حل‌شده
+        resolvedAt: { $ne: null },
     });
 
     const unresolvedPercentageInLastWeek = totalReportsInLastWeek
         ? (unresolvedReportsInLastWeek / totalReportsInLastWeek) * 100
         : 0;
 
-    // محاسبه گزارشات حل‌شده و حل‌نشده در سه روز گذشته
     const totalReportsInLast3Days = await Report.countDocuments({
         createdAt: { $gte: threeDaysAgo },
     });
     const unresolvedReportsInLast3Days = await Report.countDocuments({
         createdAt: { $gte: threeDaysAgo },
-        resolvedAt: { $exists: false }, // بررسی گزارشات حل‌نشده
+        resolvedAt: { $exists: false },
     });
     const resolvedReportsInLast3Days = await Report.countDocuments({
         createdAt: { $gte: threeDaysAgo },
-        resolvedAt: { $ne: null }, // بررسی گزارشات حل‌شده
+        resolvedAt: { $ne: null },
     });
 
     const unresolvedPercentageInLast3Days = totalReportsInLast3Days
         ? (unresolvedReportsInLast3Days / totalReportsInLast3Days) * 100
         : 0;
 
-    // محاسبه گزارشات حل‌شده و حل‌نشده از سه روز پیش تا الان
     const totalReportsInLast3DaysToNow = await Report.countDocuments({
         createdAt: { $gte: threeDaysAgo, $lte: currentDate },
     });
     const unresolvedReportsInLast3DaysToNow = await Report.countDocuments({
         createdAt: { $gte: threeDaysAgo, $lte: currentDate },
-        resolvedAt: { $exists: false }, // بررسی گزارشات حل‌نشده
+        resolvedAt: { $exists: false },
     });
     const resolvedReportsInLast3DaysToNow = await Report.countDocuments({
         createdAt: { $gte: threeDaysAgo, $lte: currentDate },
-        resolvedAt: { $ne: null }, // بررسی گزارشات حل‌شده
+        resolvedAt: { $ne: null },
     });
 
     const unresolvedPercentageInLast3DaysToNow = totalReportsInLast3DaysToNow
