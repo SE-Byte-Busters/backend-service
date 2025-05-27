@@ -5,7 +5,6 @@ export interface ITicket {
     report: Types.ObjectId;
     user: Types.ObjectId;
     userMessage: string;
-    status?: 'Pending' | 'Accepted' | 'Rejected';
     admin?: Types.ObjectId;
     adminDecisionNote?: string;
     createdAt?: Date;

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { ITicket } from "../dto";
-import { BadRequestError } from "../utils";
+import { BadRequestError, NotFoundError } from "../utils";
 import Ticket from "../models/ticket.model";
 import { Report } from "../models";
 
@@ -45,4 +45,42 @@ export const getAllTicketsForAdmin = async () => {
         .sort({ createdAt: -1 });
 
     return tickets;
+};
+
+
+
+export const respondToTicket = async (
+    ticketId: string,
+    adminId: string | undefined,
+    decisionNote: string
+): Promise<ITicket> => {
+    if (!adminId) {
+        throw new NotFoundError('Admin not found');
+    }
+    const ticket = await Ticket.findById(ticketId);
+    if (!ticket) {
+        throw new NotFoundError('Ticket not found');
+    }
+
+    if (ticket.adminDecisionNote) {
+        throw new BadRequestError('Ticket has already been answered');
+    }
+
+    ticket.admin = new mongoose.Types.ObjectId(adminId);
+    ticket.adminDecisionNote = decisionNote;
+    ticket.respondedAt = new Date();
+
+    await ticket.save();
+    return ticket;
+};
+
+
+export const getUserTickets = async (userId: string | undefined) => {
+    if (!userId) {
+        throw new NotFoundError('user not found');
+    }
+    return await Ticket.find({ user: userId })
+        .populate('report', 'title') // فقط عنوان گزارش را برگردان
+        .populate('admin', 'username') // فقط نام ادمین را برگردان
+        .sort({ createdAt: -1 }); // جدیدترین تیکت‌ها اول
 };
