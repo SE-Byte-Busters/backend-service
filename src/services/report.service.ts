@@ -133,11 +133,11 @@ export async function searchReportsInMapArea(options: MapSearchOptions): Promise
 	const polygon = {
 		type: 'Polygon',
 		coordinates: [[
-			[bounds.sw.lng, bounds.sw.lat],
-			[bounds.sw.lng, bounds.ne.lat],
-			[bounds.ne.lng, bounds.ne.lat],
-			[bounds.ne.lng, bounds.sw.lat],
-			[bounds.sw.lng, bounds.sw.lat] // Close the polygon
+			[bounds.sw.lat, bounds.sw.lng], // SW (lat, lng)
+            [bounds.ne.lat, bounds.sw.lng], // SE (lat, lng)
+            [bounds.ne.lat, bounds.ne.lng], // NE (lat, lng)
+            [bounds.sw.lat, bounds.ne.lng], // NW (lat, lng)
+            [bounds.sw.lat, bounds.sw.lng]  // Close polygon
 		]]
 	};
 
@@ -160,10 +160,7 @@ export async function searchReportsInMapArea(options: MapSearchOptions): Promise
 	// For better performance at higher zoom levels (more detailed view)
 	const limit = zoomLevel && zoomLevel > 10 ? 500 : 200;
 
-	return Report.find(queryConditions)
-		.limit(limit)
-		.lean()
-		.exec();
+	return await Report.find(queryConditions).limit(limit).lean().exec();;
 }
 
 // Alternative method for point-radius search
