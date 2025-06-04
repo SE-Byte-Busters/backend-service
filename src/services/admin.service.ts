@@ -1,9 +1,10 @@
-import { Admin, Report } from '../models';
+import { Admin, Report, User } from '../models';
 import { v4 as uuidv4 } from 'uuid';
-import { SortOrder } from 'mongoose';
+import { SortOrder, Types } from 'mongoose';
 import path from 'path';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError, UnauthorizedError } from '../utils';
 import { MinioBuckets, logger, config } from '../config';
+import { IReport } from '../dto';
 
 // -------------------------------------------------------------------------------
 export const uploadAdminProfileImageService = async (
@@ -146,4 +147,39 @@ export const adminGetStatedReportService = async (page: number = 1, limit: numbe
 
 	return { reports, total, page, pages };
 }
+// -------------------------------------------------------------------------------
+export const addScoreToReport = async (
+	reportId: string,
+	newScore: number
+): Promise<IReport> => {
+	// ✅ Add this validation:
+	if (typeof newScore !== 'number' || isNaN(newScore) || newScore < 0 || newScore > 100) {
+		throw new BadRequestError('Score must be a number between 0 and 100');
+	}
 
+	const report = await Report.findById(reportId);
+	if (!report) {
+		throw new BadRequestError('Report not found');
+	}
+
+	const previousScore = report.score || 0;
+	const scoreDifference = newScore - previousScore;
+
+	// Update report score
+	report.score = newScore;
+	await report.save();
+
+	// Update user's totalScore
+	await User.findByIdAndUpdate(report.user as Types.ObjectId, {
+		$inc: { totalScore: scoreDifference }
+	});
+
+	return report;
+};
+// -------------------------------------------------------------------------------
+
+export const getUserAdminProfile = async (_id: string) => {
+	const adminUser = await Admin.findById(_id);
+	if (!adminUser) throw new ForbiddenError('User not found.');
+	return adminUser;
+}

@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { uploadAdminProfileImageService, updateAdminProfileService, updateAdminPasswordService, adminGetPendingReportService, adminGetStatedReportService } from '../services/';
+import { uploadAdminProfileImageService, updateAdminProfileService, updateAdminPasswordService, adminGetPendingReportService, adminGetStatedReportService, addScoreToReport, getUserAdminProfile } from '../services/';
 import { CustomError, InternalServerError } from '../utils';
 import { logger } from '../config';
 import { AuthenticatedRequest } from '../dto';
@@ -130,6 +130,44 @@ export const getStatedReportController = async (req: AuthenticatedRequest, res: 
 			res.status(error.statusCode).json({ message: error.message });
 		} else {
 			logger.error(`[Error] Local Error Handler: (getStatedReportController) \n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+// -----------------------------------------------------------------------
+export const addScoreToReportController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+	try {
+		const { reportId } = req.params;
+		const { score } = req.body;
+
+		const updatedReport = await addScoreToReport(reportId, Number(score));
+
+		res.status(200).json({
+			message: 'Score updated successfully',
+			report: updatedReport
+		});
+	} catch (error: any) {
+		res.status(400).json({ error: error.message });
+	}
+};
+// -----------------------------------------------------------------------
+
+
+export const userAdminProfileController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+	try {
+		const userId = req._id;
+		if (!userId || typeof userId !== 'string') {
+			res.status(403).json({ message: 'User ID is missing in headers.' });
+		} else {
+			const result = await getUserAdminProfile(userId);
+
+			res.status(200).json({ message: 'User Admin Profile.', data: result });
+		}
+	} catch (error) {
+		if (error instanceof CustomError) {
+			res.status(error.statusCode).json({ message: error.message });
+		} else {
+			logger.error(`[Error] Local Error Handler: (userAdminProfileController) \n ${error}`);
 			res.status(500).json({ message: new InternalServerError().message });
 		}
 	}

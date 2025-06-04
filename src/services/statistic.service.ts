@@ -203,7 +203,6 @@ export const getUsersByScoreAndDate = async (): Promise<any> => {
         { $sort: { _id: 1 } },
     ]);
 
-    // دریافت کاربران در یک هفته گذشته
     const usersInLastWeek = await User.aggregate([
         { $match: { createdAt: { $gte: oneWeekAgo } } },
         {
@@ -216,7 +215,6 @@ export const getUsersByScoreAndDate = async (): Promise<any> => {
         { $sort: { _id: 1 } },
     ]);
 
-    // دریافت کاربران در سه روز گذشته
     const usersInLast3Days = await User.aggregate([
         { $match: { createdAt: { $gte: threeDaysAgo } } },
         {

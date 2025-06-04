@@ -1,11 +1,11 @@
-import { Response } from 'express'; 
-import { uploadProfileImageService, updateUserProfileService, updateUserPasswordService, getScoreAndRank, getUserProfile } from '../services/';
-import { CustomError, InternalServerError } from '../utils';
+import { Response } from 'express';
+import { uploadProfileImageService, updateUserProfileService, updateUserPasswordService, getScoreAndRank, getUserProfile, getTopUsersByScore } from '../services/';
+import { BadRequestError, CustomError, InternalServerError } from '../utils';
 import { logger } from '../config';
 import { AuthenticatedRequest } from '../dto';
 
-export const handleUploadProfileImage = async (req: AuthenticatedRequest, res: Response): Promise<void> => { 
-	try { 
+export const handleUploadProfileImage = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+	try {
 		const userId = req._id;
 		if (!userId || typeof userId !== 'string') {
 			res.status(403).json({ message: 'User ID is missing in headers.' });
@@ -27,7 +27,7 @@ export const handleUploadProfileImage = async (req: AuthenticatedRequest, res: R
 };
 
 export const updateUserProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-	try { 
+	try {
 		const userId = req._id;
 		if (!userId || typeof userId !== 'string') {
 			res.status(403).json({ message: 'User ID is missing in headers.' });
@@ -47,7 +47,7 @@ export const updateUserProfile = async (req: AuthenticatedRequest, res: Response
 };
 
 export const updateUserPassword = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-	try { 
+	try {
 		const userId = req._id;
 		if (!userId || typeof userId !== 'string') {
 			res.status(403).json({ message: 'User ID is missing in headers.' });
@@ -68,7 +68,7 @@ export const updateUserPassword = async (req: AuthenticatedRequest, res: Respons
 
 
 export const scoreAndRank = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-	try { 
+	try {
 		const userId = req._id;
 		if (!userId || typeof userId !== 'string') {
 			res.status(403).json({ message: 'User ID is missing in headers.' });
@@ -89,7 +89,7 @@ export const scoreAndRank = async (req: AuthenticatedRequest, res: Response): Pr
 
 
 export const userProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-	try { 
+	try {
 		const userId = req._id;
 		if (!userId || typeof userId !== 'string') {
 			res.status(403).json({ message: 'User ID is missing in headers.' });
@@ -103,6 +103,30 @@ export const userProfile = async (req: AuthenticatedRequest, res: Response): Pro
 			res.status(error.statusCode).json({ message: error.message });
 		} else {
 			logger.error(`[Error] Local Error Handler: (UploadProfileImageController) \n ${error}`);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+
+// ----------------------------------------------------------------------------------------
+export const getTopUsersController = async (
+	req: AuthenticatedRequest,
+	res: Response
+): Promise<void> => {
+	try {
+		const limit = parseInt(req.query.limit as string || '10', 10);
+
+		if (isNaN(limit) || limit <= 0) {
+			throw new BadRequestError('Limit must be a positive integer');
+		}
+
+		const topUsers = await getTopUsersByScore(limit);
+		res.status(200).json(topUsers);
+	} catch (error) {
+		if (error instanceof BadRequestError) {
+			res.status(400).json({ message: error.message });
+		} else {
+			console.error(error);
 			res.status(500).json({ message: new InternalServerError().message });
 		}
 	}

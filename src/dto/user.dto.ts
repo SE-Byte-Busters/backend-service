@@ -15,6 +15,7 @@ export interface IUser extends Document {
 	status?: number;
 	lastOTPAttempt: Date;
 	createdAt: Date;
+	totalScore: Number;
 	updatedAt: Date;
 	hashPassword(candidatePassword: string): Promise<string>;
 	comparePassword(candidatePassword: string): Promise<boolean>;

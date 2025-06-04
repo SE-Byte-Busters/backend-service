@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError, UnauthorizedError } from '../utils';
 import { MinioBuckets, logger, config } from '../config';
 import ScoreAndBadge from '../models/scoreAndBadge.model';
+import { IUser } from '../dto';
 
 // -------------------------------------------------------------------------------
 export const uploadProfileImageService = async (
@@ -144,3 +145,12 @@ export const getUserProfile = async (_id: string) => {
 }
 
 // -------------------------------------------------------------------------------
+export const getTopUsersByScore = async (limit: number): Promise<IUser[]> => {
+	if (limit <= 0) {
+		throw new Error('Limit must be a positive number');
+	}
+
+	return await User.find()
+		.sort({ totalScore: -1 }) // descending order
+		.limit(limit);
+};

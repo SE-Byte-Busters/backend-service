@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import mongoose from 'mongoose';
 import { notif } from '../utils/notif.utils';
+import { User } from '../models';
 
 
 interface CreateReportParams {
@@ -134,10 +135,10 @@ export async function searchReportsInMapArea(options: MapSearchOptions): Promise
 		type: 'Polygon',
 		coordinates: [[
 			[bounds.sw.lat, bounds.sw.lng], // SW (lat, lng)
-            [bounds.ne.lat, bounds.sw.lng], // SE (lat, lng)
-            [bounds.ne.lat, bounds.ne.lng], // NE (lat, lng)
-            [bounds.sw.lat, bounds.ne.lng], // NW (lat, lng)
-            [bounds.sw.lat, bounds.sw.lng]  // Close polygon
+			[bounds.ne.lat, bounds.sw.lng], // SE (lat, lng)
+			[bounds.ne.lat, bounds.ne.lng], // NE (lat, lng)
+			[bounds.sw.lat, bounds.ne.lng], // NW (lat, lng)
+			[bounds.sw.lat, bounds.sw.lng]  // Close polygon
 		]]
 	};
 
@@ -463,14 +464,11 @@ export const voteOnReport = async (
 	);
 
 	if (existingVoteIndex > -1) {
-		// به‌روزرسانی رأی قبلی
 		report.votes[existingVoteIndex].direction = direction;
 	} else {
-		// رأی جدید
 		report.votes.push({ user: new mongoose.Types.ObjectId(userId), direction });
 	}
 
-	// محاسبه امتیازهای بدون ذخیره در دیتابیس
 	let voteScore = 0;
 	let voteUpScore = 0;
 	let voteDownScore = 0;
@@ -485,7 +483,6 @@ export const voteOnReport = async (
 		}
 	}
 
-	// ذخیره تغییرات فقط در voteScore
 	report.voteScore = voteScore;
 
 	await report.save();
@@ -494,8 +491,8 @@ export const voteOnReport = async (
 		message: 'Vote recorded successfully',
 		reportId: report._id,
 		voteScore: report.voteScore,
-		voteUpScore, // ارسال تعداد Up در خروجی
-		voteDownScore, // ارسال تعداد Down در خروجی
+		voteUpScore,
+		voteDownScore,
 		totalVotes: report.votes.length
 	};
 };

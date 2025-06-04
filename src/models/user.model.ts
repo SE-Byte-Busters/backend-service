@@ -17,10 +17,10 @@ const userSchema = new Schema<IUser>(
 			required: true,
 			match: [/^\+98\d{10}$/, 'Invalid phone number format.'],
 		},
-		role: { 
+		role: {
 			type: String,
-			enum: ['user', 'group', 'company'], 
-			default: 'user' 
+			enum: ['user', 'group', 'company'],
+			default: 'user'
 		},
 		email: {
 			type: String,
@@ -67,6 +67,10 @@ const userSchema = new Schema<IUser>(
 		lastOTPAttempt: {
 			type: Date,
 			required: true,
+		},
+		totalScore: {
+			type: Number,
+			default: 0,
 		}
 	},
 	{

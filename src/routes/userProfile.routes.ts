@@ -1,5 +1,5 @@
 import express from 'express';
-import { handleUploadProfileImage, scoreAndRank, updateUserPassword, updateUserProfile, userProfile } from '../controllers';
+import { getTopUsersController, handleUploadProfileImage, scoreAndRank, updateUserPassword, updateUserProfile, userProfile } from '../controllers';
 import { uploadProfileImage, authenticateToken, partialAccess } from '../middleware';
 
 const router = express.Router();
@@ -472,5 +472,34 @@ router.post('/update-password', authenticateToken, updateUserPassword);
  *       bearerFormat: JWT
  */
 router.get('/score-and-rank', authenticateToken, scoreAndRank);
+
+
+/**
+ * @swagger
+ * /user-profile/top:
+ *   get:
+ *     summary: Get top N users by totalScore
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of top users to return ,use like /user/top?limit=3
+ *     responses:
+ *       200:
+ *         description: List of top users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid query parameter
+ */
+router.get('/top', getTopUsersController);
 
 export default router;

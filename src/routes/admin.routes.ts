@@ -1,5 +1,5 @@
 import express from 'express';
-import { handleAdminUploadProfileImage, updateAdminPassword, updateAdminProfile, getPendingReportController, getStatedReportController, updateReportStatusController, getReportByIdController } from '../controllers';
+import { handleAdminUploadProfileImage, updateAdminPassword, updateAdminProfile, getPendingReportController, getStatedReportController, updateReportStatusController, getReportByIdController, addScoreToReportController, userAdminProfileController } from '../controllers';
 import { uploadProfileImage, authenticateToken, partialAccess } from '../middleware';
 
 /**
@@ -9,6 +9,40 @@ import { uploadProfileImage, authenticateToken, partialAccess } from '../middlew
  *   description: Admin operations
  */
 const router = express.Router();
+
+/**
+ * @swagger
+ * /admin/profile:
+ *   get:
+ *     summary: Get current user's profile
+ *     description: >
+ *       Returns the authenticated user's profile information.  
+ *       Requires a valid Bearer token in the Authorization header.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully returned user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized – Missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized
+ */
+
+router.get('/profile', authenticateToken, userAdminProfileController);
+
+
 
 /**
  * @swagger
@@ -650,5 +684,67 @@ router.put('/reports/:reportId/', authenticateToken, updateReportStatusControlle
  *         description: Server error
  */
 router.get('/reports/:reportId/', authenticateToken, getReportByIdController);
+
+
+/**
+ * @swagger
+ * /admin/reports/{reportId}/score:
+ *   put:
+ *     summary: Admin adds or updates a score for a report
+ *     description: >
+ *       Use this endpoint to assign a score between 0 and 100 to a specific report.
+ *       The score will be counted toward the user's total score.
+ *     tags:
+ *       - Admin
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique ID of the report you want to score
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - score
+ *             properties:
+ *               score:
+ *                 type: number
+ *                 minimum: 0
+ *                 maximum: 100
+ *                 example: 75
+ *                 description: The score to assign to the report (must be between 0 and 100)
+ *     responses:
+ *       200:
+ *         description: Score successfully added to the report
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Score updated successfully
+ *                 report:
+ *                   type: object
+ *                   description: The updated report object
+ *       400:
+ *         description: Invalid input (e.g., score out of range or report not found)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Score must be a number between 0 and 100
+ */
+
+router.put('/reports/:reportId/score', addScoreToReportController);
+
 
 export default router;

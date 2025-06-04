@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../dto';
-import { addCommentService, addReqSolveReportService, createReportWithImages, getReportByIdService, getReportCommentsService, getReqSolvesReportService, getUserReports, searchReportsInMapArea, searchReportsNearLocation, setReportResolvedByService, updatePriorityAndApprovalStatus, voteOnReport } from '../services';
+import { addCommentService, addReqSolveReportService, createReportWithImages, getReportByIdService, getReportCommentsService, getReqSolvesReportService, getTopUsersByScore, getUserReports, searchReportsInMapArea, searchReportsNearLocation, setReportResolvedByService, updatePriorityAndApprovalStatus, voteOnReport } from '../services';
 import { logger } from '../config';
 import { BadRequestError, UnauthorizedError, InternalServerError, CustomError } from '../utils';
 

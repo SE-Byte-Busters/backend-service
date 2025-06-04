@@ -21,7 +21,7 @@ export const signupService = async (userData: UserInput) => {
 	let newUser: IUser;
 
 	try {
-		[ newUser ] = await User.create([{
+		[newUser] = await User.create([{
 			...userData,
 			role: 'user', isVerified: false, status: 0, lastOTPAttempt: new Date(),
 		}], { session });
@@ -37,7 +37,7 @@ export const signupService = async (userData: UserInput) => {
 		}], { session }); // add message_id?
 
 		await session.commitTransaction();
-	} catch(error) {
+	} catch (error) {
 		await session.abortTransaction();
 		throw error;
 	} finally {
@@ -50,15 +50,15 @@ export const signupService = async (userData: UserInput) => {
 
 
 export const verifyOTP = async (
-		code: string, _id: string, method: string, position: string ) => {
+	code: string, _id: string, method: string, position: string) => {
 	const otpRecord = await OTP.findOne({ user: new Types.ObjectId(_id), position, method });
 
 	if (!otpRecord) {
 		throw new NotFoundError('OTP not found or expired.');
-	} 
+	}
 	otpRecord.verificationAttempts = otpRecord.verificationAttempts + 1;
 
-	if (otpRecord.verificationAttempts == 7){ // change to ini
+	if (otpRecord.verificationAttempts == 7) { // change to ini
 		await otpRecord.save({ timestamps: false });
 		throw new ForbiddenError('Maximum attempts reached.');
 	} else if (otpRecord.verificationCode !== code) {
@@ -67,12 +67,12 @@ export const verifyOTP = async (
 	}
 
 	const user = await User.findById(new Types.ObjectId(_id));
-	if(user){
+	if (user) {
 		user.password = await user.hashPassword(user.password);
 		user.isVerified = true;
 		await user.save();
 
-		const score = await ScoreAndBadge.create({ 
+		const score = await ScoreAndBadge.create({
 			user: user._id, username: user.username, score: 0, badges: []
 		});
 	} else {
@@ -88,17 +88,17 @@ export const sendAgainOTP = async (_id: string, method: string, position: string
 
 	const otpRecord = await OTP.findOne({ user: new Types.ObjectId(_id), position, method });
 	const LIMIT_MINUTES_MS = 3 * 60 * 1000; // 3 minutes in milliseconds
-	
+
 	if (!otpRecord) {
 		throw new NotFoundError('OTP not found or expired.');
-	} else if(otpRecord.resendAttempts == 4){ // change to ini file
+	} else if (otpRecord.resendAttempts == 4) { // change to ini file
 		throw new ForbiddenError('Maximum attempts reached.');
-	} else if (new Date() < new Date(otpRecord.updatedAt.getTime() + LIMIT_MINUTES_MS)){
+	} else if (new Date() < new Date(otpRecord.updatedAt.getTime() + LIMIT_MINUTES_MS)) {
 		throw new ForbiddenError('Wait for the previous attempt.');
 	}
-	
+
 	const otpCode = generateOTP();
-	if(otpRecord.phone){
+	if (otpRecord.phone) {
 		await sendOTP(otpRecord.phone, otpCode);
 	}
 
@@ -110,16 +110,16 @@ export const sendAgainOTP = async (_id: string, method: string, position: string
 	return { _id: otpRecord.user };
 };
 
-export const loginService = async (phoneNumber: string, email: string, password: string): 
+export const loginService = async (phoneNumber: string, email: string, password: string):
 	Promise<{ token: string, role: string }> => {
 	let user = await User.findOne({ $or: [{ phoneNumber }, { email }] });
-	if(!user) {
+	if (!user) {
 		const admin = await Admin.findOne({ $or: [{ phoneNumber }, { email }] });
-		if(!admin){
+		if (!admin) {
 			throw new NotFoundError("Username/Password is not valid.");
 		}
 		const isPasswordValid = await admin.comparePassword(password);
-		if(!isPasswordValid) {
+		if (!isPasswordValid) {
 			throw new NotFoundError("Username/Password is not valid.");
 		}
 
@@ -132,7 +132,7 @@ export const loginService = async (phoneNumber: string, email: string, password:
 	}
 
 	const isPasswordValid = await user.comparePassword(password);
-	if(!isPasswordValid) {
+	if (!isPasswordValid) {
 		throw new NotFoundError("Username/Password is not valid.");
 	}
 
