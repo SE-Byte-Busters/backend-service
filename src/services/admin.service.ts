@@ -5,6 +5,7 @@ import path from 'path';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError, UnauthorizedError } from '../utils';
 import { MinioBuckets, logger, config } from '../config';
 import { IReport } from '../dto';
+import { notifyUser } from './notification.service';
 
 // -------------------------------------------------------------------------------
 export const uploadAdminProfileImageService = async (
@@ -121,7 +122,6 @@ export const adminGetPendingReportService = async (page: number = 1, limit: numb
 
 	// Calculate total pages
 	const pages = Math.ceil(total / limit);
-
 	return { reports, total, page, pages };
 }
 

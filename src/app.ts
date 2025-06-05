@@ -14,6 +14,7 @@ const port = parseInt(config.server.port);
 import routes from './routes/routes';
 
 
+
 const app: Application = express();
 
 // Middleware Setup

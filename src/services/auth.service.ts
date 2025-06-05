@@ -139,5 +139,6 @@ export const loginService = async (phoneNumber: string, email: string, password:
 	const jwtToken = jwt.sign({ _id: user._id }
 		, process.env.JWT_SECRET || 'Random128BitHexString', { expiresIn: '2h' }); // change to ini file 'userExpirationTime'
 
+
 	return { token: jwtToken, role: 'user' };
 };

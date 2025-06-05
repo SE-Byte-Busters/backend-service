@@ -5,6 +5,7 @@ import report from './report.routes';
 import admin from './admin.routes';
 import ticket from './ticket.routes';
 import statistic from './statistic.routes';
+import comment from './comment.routes'
 
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.use('/report/', report);
 router.use('/admin/', admin);
 router.use('/ticket/', ticket);
 router.use('/statistic/', statistic);
+router.use('/comment', comment)
 
 
 

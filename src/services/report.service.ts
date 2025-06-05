@@ -8,6 +8,7 @@ import path from 'path';
 import mongoose from 'mongoose';
 import { notif } from '../utils/notif.utils';
 import { User } from '../models';
+import { notifyUser } from './notification.service';
 
 
 interface CreateReportParams {
@@ -235,6 +236,7 @@ export const addCommentService = async (reportId: string, userId: string | undef
 
 
 
+
 export const getReportCommentsService = async (
 	reportId: string
 ): Promise<CommentWithUser[]> => {
@@ -424,7 +426,30 @@ export const updatePriorityAndApprovalStatus = async (
 	if (!user || !user.phoneNumber) {
 		throw new BadRequestError('User or phone number not found');
 	}
+	let title = '';
+	let message = '';
 
+	switch (approvalStatus) {
+		case 0:
+			title = 'Report Pending';
+			message = 'Your report is pending approval by the admin.';
+			break;
+		case 1:
+			title = 'Report Confirmed';
+			message = 'Your report has been confirmed by the admin.';
+			break;
+		case 2:
+			title = 'Report Rejected';
+			message = 'Your report has been rejected by the admin.';
+			break;
+	}
+
+	await notifyUser({
+		userId: user.toString(),
+		title,
+		message,
+		type: 'info',
+	});
 	// send the phone number to the notification service
 	await notif(user.phoneNumber, report.title, report.approvalStatus); // Example notification service
 
