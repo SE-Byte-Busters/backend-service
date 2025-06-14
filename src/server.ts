@@ -8,7 +8,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 
 dotenv.config();
 connectMongoDB();
-// initializeMinioBuckets();
+initializeMinioBuckets();
 
 const PORT = process.env.PORT || 3000;
 
