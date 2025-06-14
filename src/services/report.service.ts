@@ -66,6 +66,13 @@ export async function createReportWithImages(params: CreateReportParams) {
 			voteScore: 0,
 		});
 
+		// --- START: Added Section ---
+		// 2. Update the user's last activity timestamp after creating the report
+		if (report.user) {
+			await User.findByIdAndUpdate(report.user, { lastActivity: new Date() });
+		}
+		// --- END: Added Section ---
+
 		return report;
 
 	} catch (error) {
@@ -225,6 +232,10 @@ export const addCommentService = async (reportId: string, userId: string | undef
 	});
 	await report.save();
 
+	// 2. Update the user's last activity timestamp after creating the report
+	await User.findByIdAndUpdate(userId, { lastActivity: new Date() });
+
+
 	return {
 		message: 'Comment added successfully',
 		reportId: report._id,
@@ -304,6 +315,10 @@ export const addReqSolveReportService = async (
 
 	report.usersReqSolve.push(newRequest);
 	await report.save();
+
+	// 2. Update the user's last activity timestamp after creating the report
+	await User.findByIdAndUpdate(userId, { lastActivity: new Date() });
+
 
 	return {
 		message: 'Request added successfully',

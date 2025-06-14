@@ -1,5 +1,5 @@
 import express from 'express';
-import { handleAdminUploadProfileImage, updateAdminPassword, updateAdminProfile, getPendingReportController, getStatedReportController, updateReportStatusController, getReportByIdController, addScoreToReportController, userAdminProfileController } from '../controllers';
+import { handleAdminUploadProfileImage, updateAdminPassword, updateAdminProfile, getPendingReportController, getStatedReportController, updateReportStatusController, getReportByIdController, addScoreToReportController, userAdminProfileController, addBadgeController } from '../controllers';
 import { uploadProfileImage, authenticateToken, partialAccess } from '../middleware';
 
 /**
@@ -746,5 +746,62 @@ router.get('/reports/:reportId/', authenticateToken, getReportByIdController);
 
 router.put('/reports/:reportId/score', addScoreToReportController);
 
+
+/**
+ * @swagger
+ * /admin/user-profile/{id}/badges:
+ *   post:
+ *     summary: Add a badge to a user
+ *     description: Adds a new badge (if not already present) to the user's badge list.
+ *     tags:
+ *       - Admin
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - badge
+ *             properties:
+ *               badge:
+ *                 type: string
+ *                 example: قهرمان محیط زیست
+ *     responses:
+ *       200:
+ *         description: Badge added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 badges:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *             example:
+ *               badges: 
+ *                 - "قهرمان محیط زیست"
+ *       400:
+ *         description: Badge is required
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Badge is required"
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User not found"
+ */
+router.post('/user-profile/:id/badges', addBadgeController);
 
 export default router;

@@ -71,6 +71,16 @@ const userSchema = new Schema<IUser>(
 		totalScore: {
 			type: Number,
 			default: 0,
+		},
+		badges: {
+			type: [String],
+			default: [],
+			required: false,
+			//like : ["قهرمان محیط زیست", "فعال ترین گزارش دهنده", "فعال برتر"]
+		},
+		lastActivity: {
+			type: Date,
+			required: false,
 		}
 	},
 	{

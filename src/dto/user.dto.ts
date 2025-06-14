@@ -14,9 +14,11 @@ export interface IUser extends Document {
 	profileUrl?: string;
 	status?: number;
 	lastOTPAttempt: Date;
+	lastActivity?: Date;
 	createdAt: Date;
 	totalScore: Number;
 	updatedAt: Date;
+	badges?: string[];
 	hashPassword(candidatePassword: string): Promise<string>;
 	comparePassword(candidatePassword: string): Promise<boolean>;
 }

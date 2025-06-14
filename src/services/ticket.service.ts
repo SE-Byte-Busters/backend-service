@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
 import { ITicket } from "../dto";
 import { BadRequestError, NotFoundError } from "../utils";
-import Ticket from "../models/ticket.model";
-import { Report } from "../models";
+import { Report, Ticket } from "../models";
 
 
 export const createUserTicket = async (

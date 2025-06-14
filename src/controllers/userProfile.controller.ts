@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { uploadProfileImageService, updateUserProfileService, updateUserPasswordService, getScoreAndRank, getUserProfile, getTopUsersByScore } from '../services/';
+import { uploadProfileImageService, updateUserProfileService, updateUserPasswordService, getScoreAndRank, getUserProfile, getTopUsersByScore, addBadgeToUser } from '../services/';
 import { BadRequestError, CustomError, InternalServerError } from '../utils';
 import { logger } from '../config';
 import { AuthenticatedRequest } from '../dto';
@@ -122,6 +122,26 @@ export const getTopUsersController = async (
 
 		const topUsers = await getTopUsersByScore(limit);
 		res.status(200).json(topUsers);
+	} catch (error) {
+		if (error instanceof BadRequestError) {
+			res.status(400).json({ message: error.message });
+		} else {
+			console.error(error);
+			res.status(500).json({ message: new InternalServerError().message });
+		}
+	}
+};
+
+export const addBadgeController = async (req: AuthenticatedRequest, res: Response) => {
+	const userId = req.params.id;
+	const { badge } = req.body;
+
+	if (!badge) {
+		throw new BadRequestError('Badge is required');
+	}
+	try {
+		const updatedBadges = await addBadgeToUser(userId, badge);
+		res.status(200).json({ badges: updatedBadges });
 	} catch (error) {
 		if (error instanceof BadRequestError) {
 			res.status(400).json({ message: error.message });

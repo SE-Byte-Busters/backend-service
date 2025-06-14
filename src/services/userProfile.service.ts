@@ -154,3 +154,22 @@ export const getTopUsersByScore = async (limit: number): Promise<IUser[]> => {
 		.sort({ totalScore: -1 }) // descending order
 		.limit(limit);
 };
+
+// -------------------------------------------------------------------------------
+
+export const addBadgeToUser = async (userId: string, badge: string) => {
+	const user = await User.findById(userId);
+	if (!user) {
+		throw new Error('User not found');
+	}
+	if (!user.badges) {
+		user.badges = [];
+	}
+
+	if (!user.badges.includes(badge)) {
+		user.badges.push(badge);
+		await user.save();
+	}
+	return user.badges;
+};
+// -------------------------------------------------------------------------------
