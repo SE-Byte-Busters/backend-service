@@ -224,9 +224,10 @@ export const addCommentService = async (reportId: string, userId: string | undef
 	}
 
 	const Id = new mongoose.Types.ObjectId(userId);
-
+	const userI = await User.findById(Id);
 	report.comments.push({
 		user: Id,
+		userName: userI?.username,
 		text: text.trim(),
 		date: new Date(),
 	});
@@ -379,6 +380,8 @@ export const setReportResolvedByService = async (
 
 	report.resolvedBy = new mongoose.Types.ObjectId(userId);
 	report.resolvedAt = new Date();
+	report.status = 1;
+	report.approvalStatus = 1;
 	await report.save();
 
 	return {

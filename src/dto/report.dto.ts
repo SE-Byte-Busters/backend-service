@@ -23,7 +23,7 @@ export interface IReport extends Document {
 	score: number;
 	voteScore: number;
 	votes: { user: Types.ObjectId, direction: 'Up' | 'Down' }[];
-	comments: { user: Types.ObjectId, text: string, date: Date }[];
+	comments: { user: Types.ObjectId, userName: string | undefined, text: string, date: Date }[];
 	usersReqSolve: { user: Types.ObjectId, text: string, date: Date }[];
 }
 

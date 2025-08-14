@@ -90,7 +90,7 @@ const ReportSchema = new Schema<IReport>({
 	},
 	status: {
 		type: Number,
-		default: 0
+		default: 0 // 1=solved
 	},
 	score: {
 		type: Number,
@@ -109,22 +109,26 @@ const ReportSchema = new Schema<IReport>({
 	},
 	comments: [{
 		user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+		userName: { type: String },
 		text: { type: String, required: true, maxlength: 500 }, // change to ini
 		date: { type: Date, default: Date.now }
 	}]
 }, {
 	timestamps: true,
+
 	toJSON: {
 		virtuals: true,  // to include virtual fields
 		transform: function (doc, ret) {
-			delete ret.__v;
+			delete (ret as any).__v;
+
 			return ret;
 		}
 	},
 	toObject: {
 		virtuals: true,
 		transform: function (doc, ret) {
-			delete ret.__v;
+			delete (ret as any).__v;
+
 			return ret;
 		},
 	}

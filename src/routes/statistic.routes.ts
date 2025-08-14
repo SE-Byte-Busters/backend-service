@@ -310,7 +310,7 @@ router.get('/reports-resolved-unresolved', getUnresolvedAndResolvedReportStatsCo
  *         source: |
  *           curl -X GET "http://localhost:3000/api/v1/statistics/users-by-score-date" -H "accept: application/json"
  */
-router.get('/statistic/users-by-score-date', getUsersByScoreAndDateController);
+router.get('/users-by-score-date', getUsersByScoreAndDateController);
 
 export default router;
 

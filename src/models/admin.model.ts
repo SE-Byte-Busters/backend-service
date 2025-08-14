@@ -17,10 +17,10 @@ const adminSchema = new Schema<IAdmin>(
 			required: true,
 			match: [/^\+98\d{10}$/, 'Invalid phone number format.'],
 		},
-		role: { 
+		role: {
 			type: String,
-			enum: ['admin', 'superAdmin'], 
-			default: 'admin' 
+			enum: ['admin', 'superAdmin'],
+			default: 'admin'
 		},
 		email: {
 			type: String,

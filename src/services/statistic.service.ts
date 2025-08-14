@@ -84,6 +84,38 @@ export const getReportPriorityCounts = async (): Promise<any[]> => {
     }
 };
 
+// Helper function to get stats for a specific period
+const getStatsForPeriod = async (startDate: Date) => {
+    // --- Queries based on CREATION date ---
+    // Total reports created within the time period
+    const totalCreated = await Report.countDocuments({
+        createdAt: { $gte: startDate }
+    });
+
+    // Unresolved reports are those CREATED in the period that still don't have status: 1
+    const unresolved = await Report.countDocuments({
+        createdAt: { $gte: startDate },
+        status: { $ne: 1 },
+    });
+
+    // --- Query based on UPDATE date ---
+    // Resolved reports are those UPDATED to status: 1 within the time period
+    const resolved = await Report.countDocuments({
+        updatedAt: { $gte: startDate },
+        status: 1,
+    });
+
+    // Calculate the percentage of UNRESOLVED reports from the TOTAL CREATED in the period
+    const unresolvedPercentage = totalCreated ? (unresolved / totalCreated) * 100 : 0;
+
+    return {
+        total: totalCreated,
+        resolved,
+        unresolved,
+        unresolvedPercentage
+    };
+};
+// Your main function is now much cleaner
 export const getUnresolvedAndResolvedReportStats = async (): Promise<any> => {
     const currentDate = new Date();
 
@@ -96,83 +128,22 @@ export const getUnresolvedAndResolvedReportStats = async (): Promise<any> => {
     const threeDaysAgo = new Date(currentDate);
     threeDaysAgo.setDate(currentDate.getDate() - 3);
 
-    const totalReportsInLastMonth = await Report.countDocuments({
-        createdAt: { $gte: oneMonthAgo },
-    });
-    const unresolvedReportsInLastMonth = await Report.countDocuments({
-        createdAt: { $gte: oneMonthAgo },
-        resolvedAt: { $exists: false },
-    });
-    const resolvedReportsInLastMonth = await Report.countDocuments({
-        createdAt: { $gte: oneMonthAgo },
-        resolvedAt: { $ne: null },
-    });
+    // Get stats for each period by calling the helper function
+    const lastMonthStats = await getStatsForPeriod(oneMonthAgo);
+    const lastWeekStats = await getStatsForPeriod(oneWeekAgo);
+    const last3DaysStats = await getStatsForPeriod(threeDaysAgo);
 
-    const unresolvedPercentageInLastMonth = totalReportsInLastMonth
-        ? (unresolvedReportsInLastMonth / totalReportsInLastMonth) * 100
-        : 0;
-
-    const totalReportsInLastWeek = await Report.countDocuments({
-        createdAt: { $gte: oneWeekAgo },
-    });
-    const unresolvedReportsInLastWeek = await Report.countDocuments({
-        createdAt: { $gte: oneWeekAgo },
-        resolvedAt: { $exists: false },
-    });
-    const resolvedReportsInLastWeek = await Report.countDocuments({
-        createdAt: { $gte: oneWeekAgo },
-        resolvedAt: { $ne: null },
-    });
-
-    const unresolvedPercentageInLastWeek = totalReportsInLastWeek
-        ? (unresolvedReportsInLastWeek / totalReportsInLastWeek) * 100
-        : 0;
-
-    const totalReportsInLast3Days = await Report.countDocuments({
-        createdAt: { $gte: threeDaysAgo },
-    });
-    const unresolvedReportsInLast3Days = await Report.countDocuments({
-        createdAt: { $gte: threeDaysAgo },
-        resolvedAt: { $exists: false },
-    });
-    const resolvedReportsInLast3Days = await Report.countDocuments({
-        createdAt: { $gte: threeDaysAgo },
-        resolvedAt: { $ne: null },
-    });
-
-    const unresolvedPercentageInLast3Days = totalReportsInLast3Days
-        ? (unresolvedReportsInLast3Days / totalReportsInLast3Days) * 100
-        : 0;
-
-    const totalReportsInLast3DaysToNow = await Report.countDocuments({
-        createdAt: { $gte: threeDaysAgo, $lte: currentDate },
-    });
-    const unresolvedReportsInLast3DaysToNow = await Report.countDocuments({
-        createdAt: { $gte: threeDaysAgo, $lte: currentDate },
-        resolvedAt: { $exists: false },
-    });
-    const resolvedReportsInLast3DaysToNow = await Report.countDocuments({
-        createdAt: { $gte: threeDaysAgo, $lte: currentDate },
-        resolvedAt: { $ne: null },
-    });
-
-    const unresolvedPercentageInLast3DaysToNow = totalReportsInLast3DaysToNow
-        ? (unresolvedReportsInLast3DaysToNow / totalReportsInLast3DaysToNow) * 100
-        : 0;
-
+    // Also fixed a copy-paste bug from your original return object
     return {
-        unresolvedReportsInLastMonth,
-        resolvedReportsInLastMonth,
-        unresolvedPercentageInLastMonth,
-        unresolvedReportsInLastWeek,
-        resolvedReportsInLastWeek,
-        unresolvedPercentageInLastWeek,
-        unresolvedReportsInLast3Days,
-        resolvedReportsInLast3Days,
-        unresolvedPercentageInLast3Days,
-        unresolvedReportsInLast3DaysToNow,
-        resolvedReportsInLast3DaysToNow,
-        unresolvedPercentageInLast3DaysToNow,
+        unresolvedReportsInLastMonth: lastMonthStats.unresolved,
+        resolvedReportsInLastMonth: lastMonthStats.resolved,
+        unresolvedPercentageInLastMonth: lastMonthStats.unresolvedPercentage,
+        unresolvedReportsInLastWeek: lastWeekStats.unresolved,
+        resolvedReportsInLastWeek: lastWeekStats.resolved,
+        unresolvedPercentageInLastWeek: lastWeekStats.unresolvedPercentage,
+        unresolvedReportsInLast3Days: last3DaysStats.unresolved,
+        resolvedReportsInLast3Days: last3DaysStats.resolved,
+        unresolvedPercentageInLast3Days: last3DaysStats.unresolvedPercentage,
     };
 };
 

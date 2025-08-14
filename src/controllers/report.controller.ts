@@ -220,6 +220,7 @@ export async function searchNearLocation(req: AuthenticatedRequest, res: Respons
 // am
 export const addReportCommentController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
 	try {
+
 		const { reportId } = req.params;
 		const { text } = req.body;
 
@@ -228,15 +229,17 @@ export const addReportCommentController = async (req: AuthenticatedRequest, res:
 		}
 
 		await addCommentService(reportId, req._id, text);
-
 		res.status(201).json({ message: 'Comment added successfully.' });
+
 	} catch (error) {
+
 		if (error instanceof BadRequestError) {
 			res.status(400).json({ message: error.message });
 		} else {
 			logger.error(`[Error] addReportCommentController\n ${error}`);
 			res.status(500).json({ message: new InternalServerError().message });
 		}
+
 	}
 };
 
@@ -252,7 +255,6 @@ export const getReportCommentsController = async (req: Request, res: Response): 
 			comments,
 		});
 	} catch (error) {
-		// مدیریت خطا
 		if (error instanceof BadRequestError) {
 			res.status(404).json({ message: error.message });
 		} else {
