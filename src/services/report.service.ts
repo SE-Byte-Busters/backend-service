@@ -440,7 +440,7 @@ export const updatePriorityAndApprovalStatus = async (
 	await report.save();
 
 	// Explicitly cast the user to IUser type
-	const user = report.user as IUser;
+	const user = report.user;
 
 	if (!user || !user.phoneNumber) {
 		throw new BadRequestError('User or phone number not found');
@@ -464,13 +464,14 @@ export const updatePriorityAndApprovalStatus = async (
 	}
 
 	await notifyUser({
-		userId: user.toString(),
+		userId: user._id.toString(), // or simply user._i,
 		title,
 		message,
 		type: 'info',
 	});
+
 	// send the phone number to the notification service
-	await notif(user.phoneNumber, report.title, report.approvalStatus); // Example notification service
+	// await notif(user.phoneNumber, report.title, report.approvalStatus); // Example notification service
 
 	return {
 		message: 'Priority and approval status updated successfully',

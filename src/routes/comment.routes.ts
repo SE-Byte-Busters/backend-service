@@ -106,6 +106,6 @@ router.post('/:commentId/rate', authenticateToken, rateCommentController);
  *       500:
  *         description: Internal server error
  */
-router.get('/', authenticateToken, getAllCommentsController);
+router.get('/', getAllCommentsController);
 
 export default router;
