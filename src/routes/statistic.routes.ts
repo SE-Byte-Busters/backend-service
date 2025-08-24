@@ -1,5 +1,6 @@
 import express from 'express';
 import { getCountReportsByDateController, getPriorityReportStatsController, getReportsApprovalStatusController, getUnresolvedAndResolvedReportStatsController, getUsersByScoreAndDateController } from '../controllers';
+import { authenticateToken } from '../middleware';
 
 const router = express.Router();
 /**
@@ -233,7 +234,7 @@ router.get('/reports/priority', getPriorityReportStatsController);
  *         source: |
  *           curl -X GET "http://localhost:3000/api/v1/statistics/reports-resolved-unresolved" -H "accept: application/json"
  */
-router.get('/reports-resolved-unresolved', getUnresolvedAndResolvedReportStatsController);
+router.get('/reports-resolved-unresolved', authenticateToken, getUnresolvedAndResolvedReportStatsController);
 
 
 
@@ -310,7 +311,7 @@ router.get('/reports-resolved-unresolved', getUnresolvedAndResolvedReportStatsCo
  *         source: |
  *           curl -X GET "http://localhost:3000/api/v1/statistics/users-by-score-date" -H "accept: application/json"
  */
-router.get('/users-by-score-date', getUsersByScoreAndDateController);
+router.get('/users-by-score-date', authenticateToken, getUsersByScoreAndDateController);
 
 export default router;
 

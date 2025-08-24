@@ -402,6 +402,7 @@ export const getReportByIdService = async (reportId: string) => {
 		.lean()
 		.exec();
 
+
 	if (!report) {
 		throw new BadRequestError('Report not found');
 	}
