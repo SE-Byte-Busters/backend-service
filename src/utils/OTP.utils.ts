@@ -1,4 +1,6 @@
 import { logger } from "../config";
+import { HttpsProxyAgent } from "https-proxy-agent";
+import fetch, { RequestInit } from "node-fetch";
 
 export const generateOTP = (): string => {
 	return Math.floor(100000 + Math.random() * 900000).toString();
@@ -6,6 +8,9 @@ export const generateOTP = (): string => {
 
 export const sendOTP = async (recipient: string, otp: string) => {
 	// logger.info(`Sending OTP ${otp} to ${recipient}`);
+
+	const proxy = process.env.PROXY || "http://user:pass@ip:port";
+	const agent = new HttpsProxyAgent(proxy);
 
 	const url: string = process.env.SMS_URL || 'https://yourSMSprovider';
 	const headers = { 
@@ -23,8 +28,8 @@ export const sendOTP = async (recipient: string, otp: string) => {
 	};
 
 	const response = await fetch(url, {
-		method: 'POST', headers, body: JSON.stringify(body)
-	});
+		method: 'POST', headers, body: JSON.stringify(body), agent
+	} as RequestInit & { agent: any });
 
 	if(response.ok){
 		const data = await response.json();

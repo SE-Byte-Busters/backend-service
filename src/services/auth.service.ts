@@ -11,7 +11,7 @@ import Admin from '../models/admin.model';
 export const signupService = async (userData: UserInput) => {
 	const { phoneNumber, email } = userData;
 
-	const existingUser = await User.findOne({ $or: [{ phoneNumber }, { email }] }); // check only for Verified users
+	const existingUser = await User.findOne({ $or: [{ phoneNumber }, { $and: [{ email: { $exists: true } }, { email: email } ] }] }); // check only for Verified users
 	if (existingUser) {
 		throw new BadRequestError('User already exists with this phone or email.');
 	}
@@ -45,7 +45,7 @@ export const signupService = async (userData: UserInput) => {
 		session.endSession();
 	}
 
-	return { _id: newUser._id, otpSentTo: phoneNumber || email };
+	return { _id: newUser._id, otpSentTo: phoneNumber || email }; // existingUser   newUser
 };
 
 
