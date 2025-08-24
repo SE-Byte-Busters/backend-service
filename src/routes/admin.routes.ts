@@ -744,7 +744,7 @@ router.get('/reports/:reportId/', authenticateToken, getReportByIdController);
  *                   example: Score must be a number between 0 and 100
  */
 
-router.put('/reports/:reportId/score', addScoreToReportController);
+router.put('/reports/:reportId/score', authenticateToken, addScoreToReportController);
 
 
 /**
@@ -802,6 +802,7 @@ router.put('/reports/:reportId/score', addScoreToReportController);
  *             example:
  *               message: "User not found"
  */
-router.post('/user-profile/:id/badges', addBadgeController);
+router.post('/user-profile/:id/badges', authenticateToken, addBadgeController);
+
 
 export default router;

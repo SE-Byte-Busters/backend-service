@@ -500,6 +500,6 @@ router.get('/score-and-rank', authenticateToken, scoreAndRank);
  *       400:
  *         description: Invalid query parameter
  */
-router.get('/top', getTopUsersController);
+router.get('/top', authenticateToken, getTopUsersController);
 
 export default router;
