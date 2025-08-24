@@ -9,13 +9,17 @@ export const sendOTP = async (recipient: string, otp: string) => {
 
 	const url: string = process.env.SMS_URL || 'https://yourSMSprovider';
 	const headers = { 
-		'accept': 'application/json', 'apikey': process.env.SMS_KEY || 'APIKEY', 'Content-Type': 'application/json' 
+		'accept': 'application/json', 
+		'apikey': process.env.SMS_KEY || 'APIKEY', 
+		'Content-Type': 'application/json' 
 	};
 	const body = {
-		"recipient": [ recipient ],
+		"code": process.env.SMS_CODE,
+		"recipient": recipient,
 		"sender": process.env.PHONE_NUMBER,
-		// "time": "2025-03-21T09:12:50.824Z", not required
-		"message": `Welcome to Clean City site. OTP code: ${otp}`
+		"variable": {
+			"verification-code": otp
+		}
 	};
 
 	const response = await fetch(url, {
